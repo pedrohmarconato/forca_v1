@@ -1,0 +1,123 @@
+JSON para Wrapper 3 (Distribuidor para BD)
+
+{
+  "treinamento_id": "",
+  "operacao": "",
+  "timestamp": "",
+  "dados": {
+    "plano_principal": {
+      /* Todo o conteúdo do plano principal do JSON do Wrapper 2 */
+    },
+    "adaptacoes": {
+      "humor": {
+        "muito_cansado": [
+          {
+            "adaptacao_id": "",
+            "sessao_original_id": "",
+            "ajustes": {
+              "intensidade": null,
+              "volume": null,
+              "foco": "",
+              "exercicios_removidos": [],
+              "exercicios_adicionados": [],
+              "exercicios_modificados": [
+                {
+                  "exercicio_id": "",
+                  "series_ajuste": null,
+                  "repeticoes_ajuste": "",
+                  "tempo_descanso_ajuste": null
+                }
+              ]
+            },
+            "duracao_ajustada": null,
+            "nivel_intensidade_ajustado": null
+          }
+        ],
+        "cansado": [],
+        "neutro": [],
+        "disposto": [],
+        "muito_disposto": []
+      },
+      "tempo_disponivel": {
+        "muito_curto": [
+          {
+            "adaptacao_id": "",
+            "sessao_original_id": "",
+            "duracao_alvo": null,
+            "estrategia": "",
+            "exercicios_priorizados": [],
+            "exercicios_removidos": [],
+            "exercicios_modificados": [
+              {
+                "exercicio_id": "",
+                "series_ajuste": null,
+                "repeticoes_ajuste": "",
+                "tempo_descanso_ajuste": null,
+                "metodo_ajustado": ""
+              }
+            ],
+            "circuitos": [
+              {
+                "circuito_id": "",
+                "exercicios": [],
+                "repeticoes_circuito": null,
+                "tempo_descanso_entre_exercicios": null,
+                "tempo_descanso_entre_circuitos": null
+              }
+            ]
+          }
+        ],
+        "curto": [],
+        "padrao": [],
+        "longo": [],
+        "muito_longo": []
+      }
+    }
+  },
+  "mapeamento_tabelas": {
+    "treinamento": {
+      "tabela": "Fato_Treinamento",
+      "campos": [
+        {"json_path": "dados.plano_principal.nome", "tabela_campo": "nome"},
+        {"json_path": "dados.plano_principal.descricao", "tabela_campo": "descricao"}
+        /* Outros mapeamentos */
+      ]
+    },
+    "ciclos": {
+      "tabela": "Fato_CicloTreinamento",
+      "campos": []
+    },
+    "microciclos": {
+      "tabela": "Fato_MicrocicloSemanal",
+      "campos": []
+    },
+    "sessoes": {
+      "tabela": "Fato_SessaoTreinamento",
+      "campos": []
+    },
+    "exercicios": {
+      "tabela": "Fato_ExercicioSessao",
+      "campos": []
+    },
+    "adaptacoes_humor": {
+      "tabela": "Fato_AdaptacaoTreinamento",
+      "campos": []
+    },
+    "adaptacoes_tempo": {
+      "tabela": "Fato_AdaptacaoTreinamento",
+      "campos": []
+    }
+  },
+  "validacao": {
+    "regras": [
+      {"campo": "dados.plano_principal.duracao_semanas", "validacao": "numero_positivo"},
+      {"campo": "dados.plano_principal.frequencia_semanal", "validacao": "entre_1_e_7"}
+      /* Outras regras de validação */
+    ],
+    "mensagens_erro": []
+  },
+  "controle_versao": {
+    "versao_anterior": "",
+    "modificacoes": []
+  }
+}

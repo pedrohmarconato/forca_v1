@@ -1,0 +1,103 @@
+JSON para Wrapper 1 (Treinador Especialista)
+{
+  "treinamento_id": "",
+  "versao": "",
+  "data_criacao": "",
+  "usuario": {
+    "id": "",
+    "nome": "",
+    "nivel": "",
+    "objetivos": [
+      {
+        "objetivo_id": "",
+        "nome": "",
+        "prioridade": null
+      }
+    ],
+    "restricoes": [
+      {
+        "restricao_id": "",
+        "nome": "",
+        "gravidade": ""
+      }
+    ]
+  },
+  "plano_principal": {
+    "nome": "",
+    "descricao": "",
+    "periodizacao": {
+      "tipo": "",
+      "descricao": ""
+    },
+    "duracao_semanas": null,
+    "frequencia_semanal": null,
+    "ciclos": [
+      {
+        "ciclo_id": "",
+        "nome": "",
+        "ordem": null,
+        "duracao_semanas": null,
+        "objetivo": "",
+        "microciclos": [
+          {
+            "semana": null,
+            "volume": "",
+            "intensidade": "",
+            "foco": "",
+            "sessoes": [
+              {
+                "sessao_id": "",
+                "nome": "",
+                "tipo": "",
+                "duracao_minutos": null,
+                "nivel_intensidade": null,
+                "dia_semana": null,
+                "grupos_musculares": [
+                  {
+                    "grupo_id": "",
+                    "nome": "",
+                    "prioridade": null
+                  }
+                ],
+                "exercicios": [
+                  {
+                    "exercicio_id": "",
+                    "nome": "",
+                    "ordem": null,
+                    "equipamento": "",
+                    "series": null,
+                    "repeticoes": "",
+                    "percentual_rm": null,
+                    "tempo_descanso": null,
+                    "cadencia": "",
+                    "metodo": "",
+                    "progressao": [
+                      {
+                        "semana": null,
+                        "ajuste": ""
+                      }
+                    ],
+                    "observacoes": ""
+                  }
+                ],
+                "aquecimento": {
+                  "duracao_minutos": null,
+                  "exercicios": []
+                },
+                "desaquecimento": {
+                  "duracao_minutos": null,
+                  "exercicios": []
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metricas": {
+      "calorias_estimadas": null,
+      "nivel_fadiga_esperado": null,
+      "tempo_recuperacao_horas": null
+    }
+  }
+}

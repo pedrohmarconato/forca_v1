@@ -1,0 +1,247 @@
+Distribuidor para BD - Modelo de banco de dados
+
+# Modelo de Banco de Dados Otimizado para Sistema de Treinamento
+
+## Tabelas de Dimensão
+
+### Dim_Usuario
+- **usuario_id** (PK)
+- nome
+- data_nascimento
+- altura
+- peso
+- genero
+- nivel_experiencia
+- ativo
+
+### Dim_Objetivo
+- **objetivo_id** (PK)
+- nome
+- descricao
+- categoria
+
+### Dim_Restricao
+- **restricao_id** (PK)
+- nome
+- regiao_corporal
+- gravidade
+- descricao
+
+### Dim_GrupoMuscular
+- **grupo_muscular_id** (PK)
+- nome
+- regiao_corporal
+- funcao (primario, sinergista, estabilizador)
+
+### Dim_Exercicio
+- **exercicio_id** (PK)
+- nome
+- descricao
+- tipo
+- equipamento
+- nivel_dificuldade
+- padrao_movimento (empurrar, puxar, agachar, etc.)
+- instrucoes
+
+### Dim_ModeloPeriodizacao
+- **periodizacao_id** (PK)
+- nome (linear, ondulada, blocos, etc.)
+- descricao
+- duracao_padrao_ciclo
+- caracteristicas
+
+### Dim_MetodoTreinamento
+- **metodo_id** (PK)
+- nome (drop-set, rest-pause, pirâmide, etc.)
+- descricao
+- nivel_intensidade
+- aplicabilidade
+
+### Dim_TipoSessao
+- **tipo_sessao_id** (PK)
+- nome
+- descricao
+- categoria (força, hipertrofia, resistência, etc.)
+
+### Dim_VariavelTreinamento
+- **variavel_id** (PK)
+- nome (volume, intensidade, densidade, etc.)
+- descricao
+- unidade_medida
+- faixa_valores
+
+### Dim_Humor
+- **humor_id** (PK)
+- nome
+- nivel
+- ajuste_intensidade
+- ajuste_volume
+
+### Dim_TempoDisponivel
+- **tempo_disponivel_id** (PK)
+- nome
+- minutos_min
+- minutos_max
+- estrategia_adaptacao
+
+## Tabelas de Fato
+
+### Fato_Treinamento
+- **treinamento_id** (PK)
+- usuario_id (FK)
+- periodizacao_id (FK)
+- nome
+- descricao
+- data_inicio
+- data_fim
+- status
+- duracao_semanas
+- frequencia_semanal
+- observacoes
+
+### Fato_CicloTreinamento
+- **ciclo_id** (PK)
+- treinamento_id (FK)
+- nome
+- ordem
+- tipo (volume, intensidade, recuperação, etc.)
+- duracao_semanas
+- objetivo_especifico
+- observacoes
+
+### Fato_MicrocicloSemanal
+- **microciclo_id** (PK)
+- ciclo_id (FK)
+- semana
+- volume_planejado
+- intensidade_planejada
+- foco
+- observacoes
+
+### Fato_UsuarioObjetivo
+- **usuario_objetivo_id** (PK)
+- usuario_id (FK)
+- objetivo_id (FK)
+- prioridade
+- data_inicio
+- data_fim
+- status
+
+### Fato_UsuarioRestricao
+- **usuario_restricao_id** (PK)
+- usuario_id (FK)
+- restricao_id (FK)
+- data_inicio
+- data_fim
+- observacoes
+
+### Fato_SessaoTreinamento
+- **sessao_id** (PK)
+- microciclo_id (FK)
+- tipo_sessao_id (FK)
+- nome
+- descricao
+- duracao_minutos
+- nivel_intensidade
+- dia_semana
+- ordem_dia
+- calorias_estimadas
+- tempo_recuperacao_horas
+
+### Fato_SessaoGrupoMuscular
+- **sessao_grupo_id** (PK)
+- sessao_id (FK)
+- grupo_muscular_id (FK)
+- prioridade
+- volume_especifico
+
+### Fato_ExercicioSessao
+- **exercicio_sessao_id** (PK)
+- sessao_id (FK)
+- exercicio_id (FK)
+- ordem
+- series
+- repeticoes_min
+- repeticoes_max
+- peso_sugerido
+- percentual_rm
+- tempo_descanso_segundos
+- cadencia (ex: "2-0-1-0" para excêntrica-pausa-concêntrica-pausa)
+- metodo_treinamento_id (FK, nullable)
+- observacoes
+
+### Fato_ProgressaoExercicio
+- **progressao_id** (PK)
+- exercicio_sessao_id (FK)
+- semana
+- ajuste_volume
+- ajuste_intensidade
+- metrica_progressao
+- valor_progressao
+
+### Fato_SubstituicaoExercicio
+- **substituicao_id** (PK)
+- exercicio_sessao_id (FK)
+- exercicio_substituto_id (FK)
+- tipo_substituicao
+- motivo_substituicao
+- prioridade
+
+### Fato_AquecimentoDesaquecimento
+- **aquecimento_desaquecimento_id** (PK)
+- sessao_id (FK)
+- tipo (aquecimento/desaquecimento)
+- duracao_minutos
+- descricao
+
+### Fato_ExercicioAquecimento
+- **exercicio_aquecimento_id** (PK)
+- aquecimento_desaquecimento_id (FK)
+- nome
+- duracao_segundos
+- intensidade
+- descricao
+
+### Fato_AdaptacaoTreinamento
+- **adaptacao_id** (PK)
+- treinamento_id (FK)
+- sessao_original_id (FK)
+- humor_id (FK)
+- tempo_disponivel_id (FK)
+- data_criacao
+- ajustes_aplicados (JSON)
+- status
+
+### Fato_RegistroTreino
+- **registro_id** (PK)
+- usuario_id (FK)
+- sessao_id (FK)
+- adaptacao_id (FK, nullable)
+- data_realizado
+- duracao_real_minutos
+- humor_antes
+- humor_depois
+- nivel_fadiga
+- nivel_satisfacao
+- observacoes
+
+### Fato_RegistroExercicio
+- **registro_exercicio_id** (PK)
+- registro_id (FK)
+- exercicio_id (FK)
+- series_realizadas
+- repeticoes_realizadas
+- peso_utilizado
+- dificuldade_percebida
+- observacoes
+
+### Fato_MetricaProgresso
+- **metrica_id** (PK)
+- usuario_id (FK)
+- treinamento_id (FK)
+- data_medicao
+- peso_corporal
+- percentual_gordura
+- massa_muscular
+- circunferencias (JSON)
+- observacoes

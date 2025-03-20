@@ -1,0 +1,90 @@
+JSON para Wrapper 2 (Sistema de Adaptação do Treinamento)
+
+{
+  "treinamento_id": "",
+  "versao": "",
+  "data_criacao": "",
+  "usuario": {
+    "id": "",
+    "nome": "",
+    "nivel": "",
+    "objetivos": [],
+    "restricoes": []
+  },
+  "plano_principal": {
+    /* Todo o conteúdo do JSON do Wrapper 1 */
+  },
+  "adaptacoes": {
+    "humor": {
+      "baixo": [
+        {
+          "adaptacao_id": "",
+          "sessao_original_id": "",
+          "ajustes": {
+            "intensidade": null,
+            "volume": null,
+            "foco": "",
+            "exercicios_removidos": [],
+            "exercicios_adicionados": [],
+            "exercicios_modificados": [
+              {
+                "exercicio_id": "",
+                "series_ajuste": null,
+                "repeticoes_ajuste": "",
+                "tempo_descanso_ajuste": null
+              }
+            ]
+          },
+          "duracao_ajustada": null,
+          "nivel_intensidade_ajustado": null
+        }
+      ],
+      "medio": [],
+      "alto": []
+    },
+    "tempo_disponivel": {
+      "curto": [
+        {
+          "adaptacao_id": "",
+          "sessao_original_id": "",
+          "duracao_alvo": null,
+          "estrategia": "",
+          "exercicios_priorizados": [],
+          "exercicios_removidos": [],
+          "exercicios_modificados": [
+            {
+              "exercicio_id": "",
+              "series_ajuste": null,
+              "repeticoes_ajuste": "",
+              "tempo_descanso_ajuste": null,
+              "metodo_ajustado": ""
+            }
+          ],
+          "circuitos": [
+            {
+              "circuito_id": "",
+              "exercicios": [],
+              "repeticoes_circuito": null,
+              "tempo_descanso_entre_exercicios": null,
+              "tempo_descanso_entre_circuitos": null
+            }
+          ]
+        }
+      ],
+      "padrao": [],
+      "longo": []
+    },
+    "fadiga": {
+      "alta": [],
+      "normal": [],
+      "baixa": []
+    },
+    "lesao_temporaria": {
+      "adaptacoes_por_regiao": {
+        "joelho": [],
+        "ombro": [],
+        "lombar": []
+      }
+    }
+  }
+}
