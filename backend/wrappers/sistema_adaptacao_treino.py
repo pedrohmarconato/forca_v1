@@ -25,19 +25,45 @@ class SistemaAdaptacao:
         self.logger = WrapperLogger("Wrapper2_Adaptacao")
         self.logger.info("Inicializando Sistema de Adaptação")
         
-        try:
-            self.prompt_adaptacao = self._carregar_prompt("/prompt/Prompt Sistema de Adaptação.txt")
-            self.logger.info("Prompt de adaptação carregado com sucesso")
-        except FileNotFoundError as e:
-            self.logger.error(f"Erro ao carregar prompt de adaptação: {str(e)}")
-            self.logger.warning("Tentando caminho alternativo para o prompt")
+        # Tentar carregar o prompt de vários caminhos possíveis
+        prompt_paths = [
+            "/prompt/Prompt Sistema de Adaptação.txt",
+            "prompt/Prompt Sistema de Adaptação.txt",
+            "../prompt/Prompt Sistema de Adaptação.txt",
+            "Prompt Sistema de Adaptação.txt"
+        ]
+        
+        prompt_carregado = False
+        for path in prompt_paths:
             try:
-                alt_path = "Prompt Sistema de Adaptação.txt"
-                self.prompt_adaptacao = self._carregar_prompt(alt_path)
-                self.logger.info("Prompt carregado do caminho alternativo com sucesso")
-            except FileNotFoundError as e2:
-                self.logger.critical(f"Não foi possível carregar o prompt de adaptação: {str(e2)}")
-                raise
+                self.prompt_adaptacao = self._carregar_prompt(path)
+                self.logger.info(f"Prompt de adaptação carregado com sucesso de: {path}")
+                prompt_carregado = True
+                break
+            except FileNotFoundError:
+                self.logger.debug(f"Prompt não encontrado em: {path}")
+            except Exception as e:
+                self.logger.debug(f"Erro ao carregar prompt de {path}: {str(e)}")
+        
+        if not prompt_carregado:
+            self.logger.warning("Não foi possível carregar o prompt de adaptação, usando prompt padrão")
+            # Usar um prompt padrão
+            self.prompt_adaptacao = """
+            # PROMPT DE ADAPTAÇÃO DO SISTEMA (TEMPLATE PADRÃO)
+            
+            O Sistema de Adaptação ajusta o plano de treinamento original de acordo com:
+            - Nível de humor/energia do usuário
+            - Tempo disponível para treino no momento
+            
+            Para cada sessão do plano original, crie variações para diferentes situações:
+            - Quando o usuário está mais cansado ou com pouca energia
+            - Quando o usuário está com disposição acima do normal
+            - Quando o usuário tem menos tempo que o previsto
+            - Quando o usuário tem mais tempo que o previsto
+            
+            Use as diretrizes a seguir para cada tipo de adaptação.
+            """
+            self.logger.info("Prompt padrão configurado com sucesso")
         
         try:
             self.schema = self._carregar_schema_json()

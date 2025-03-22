@@ -109,19 +109,40 @@ class WrapperLogger:
                 args_str = ", ".join(formatted_args)
                 
                 # Log de entrada
-                logger.log(level, f"Iniciando {func_name}({args_str})")
+                if level == logging.INFO:
+                    logger.info(f"Iniciando {func_name}({args_str})")
+                elif level == logging.DEBUG:
+                    logger.debug(f"Iniciando {func_name}({args_str})")
+                elif level == logging.WARNING:
+                    logger.warning(f"Iniciando {func_name}({args_str})")
+                elif level == logging.ERROR:
+                    logger.error(f"Iniciando {func_name}({args_str})")
+                else:
+                    logger.info(f"Iniciando {func_name}({args_str})")
                 
                 try:
                     # Executar função
                     result = func(self, *args, **kwargs)
                     
                     # Log de saída
+                    msg = ""
                     if result is None:
-                        logger.log(level, f"Concluído {func_name} -> None")
+                        msg = f"Concluído {func_name} -> None"
                     elif isinstance(result, (str, dict, list)) and len(str(result)) > 50:
-                        logger.log(level, f"Concluído {func_name} -> {str(result)[:50]}... ({len(str(result))} chars)")
+                        msg = f"Concluído {func_name} -> {str(result)[:50]}... ({len(str(result))} chars)"
                     else:
-                        logger.log(level, f"Concluído {func_name} -> {result}")
+                        msg = f"Concluído {func_name} -> {result}"
+                    
+                    if level == logging.INFO:
+                        logger.info(msg)
+                    elif level == logging.DEBUG:
+                        logger.debug(msg)
+                    elif level == logging.WARNING:
+                        logger.warning(msg)
+                    elif level == logging.ERROR:
+                        logger.error(msg)
+                    else:
+                        logger.info(msg)
                     
                     return result
                     

@@ -1,19 +1,95 @@
 # API e Integração para Sistema FORCA_V1 #
 
+# Importações
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import json
 import os
 import time
 import traceback
+import datetime
 from typing import Dict, Any, Optional
+
+# Importar o módulo de logging
+from ..utils.logger import WrapperLogger
 
 # Importações dos wrappers
 from ..wrappers.treinador_especialista import TreinadorEspecialista
 from ..wrappers.sistema_adaptacao_treino import SistemaAdaptacao
 from ..wrappers.distribuidor_treinos import DistribuidorBD
 
-# Importar o módulo de logging
-from ..utils.logger import WrapperLogger
+# Inicialização da aplicação Flask
+app = Flask(__name__)
 
+# Configuração CORS
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:3000"],  # URL do frontend
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
+
+# Handler para garantir cabeçalhos CORS em todas as respostas
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    return response
+
+# Importar rotas de teste
+try:
+    # Importação relativa (mesma pasta)
+    from .test_routes import test_bp
+    app.register_blueprint(test_bp)
+    print("Rotas de teste registradas com sucesso (importação relativa)")
+except ImportError:
+    try:
+        # Tentativa com caminho absoluto
+        import sys
+        import os
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+        from test_routes import test_bp
+        app.register_blueprint(test_bp)
+        print("Rotas de teste registradas com sucesso (importação absoluta)")
+    except ImportError:
+        print("Módulo de rotas de teste não encontrado, usando apenas rotas regulares")
+    except Exception as e:
+        print(f"Erro ao importar rotas de teste via caminho absoluto: {str(e)}")
+        print(traceback.format_exc())
+except Exception as e:
+    print(f"Erro ao registrar rotas de teste: {str(e)}")
+    print(traceback.format_exc())
+
+@app.route('/api/criar-plano-teste', methods=['POST'])
+def criar_plano_teste():
+    """Endpoint simplificado apenas para depuração"""
+    try:
+        user_data = request.json
+        
+        # Criar diretório para os arquivos
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "json", f"teste_{timestamp}")
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Salvar apenas os dados do formulário
+        formdata_path = os.path.join(output_dir, "dados_formulario.json")
+        with open(formdata_path, "w", encoding="utf-8") as f:
+            json.dump(user_data, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({
+            "status": "success",
+            "message": "Dados do formulário salvos com sucesso",
+            "files_saved": [formdata_path]
+        })
+        
+    except Exception as e:
+        print(f"ERRO: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# Função para executar o pipeline completo de treinamento
 def run_training_pipeline(api_key: str, user_data: Dict[str, Any], db_config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Execute the complete training pipeline using all three wrappers.
@@ -153,67 +229,77 @@ if __name__ == "__main__":
     logger = WrapperLogger("Main")
     logger.info("Iniciando script de integração")
     
-    # Claude API key (get from environment variable for security)
-    api_key = os.environ.get("CLAUDE_API_KEY", "your_api_key_here")
-    if api_key == "your_api_key_here":
-        logger.warning("Nenhuma API_KEY encontrada, usando valor padrão (não funcionará)")
+    # TESTE: Verificar se é para executar o modo de teste ou o pipeline normal
+    modo_teste = os.environ.get("TESTE_MODE", "0") == "1"
     
-    logger.info("Preparando dados do usuário para exemplo")
-    # Example user data
-    user_data = {
-        "id": "user123",
-        "nome": "João Silva",
-        "idade": 30,
-        "data_nascimento": "1993-05-15",
-        "peso": 75,
-        "altura": 175,
-        "genero": "masculino",
-        "nivel": "intermediário",
-        "historico_treino": "3 anos de musculação",
-        "tempo_treino": 60,  # tempo disponível por sessão em minutos
-        "objetivos": [
-            {"nome": "Hipertrofia", "prioridade": 1},
-            {"nome": "Força", "prioridade": 2}
-        ],
-        "restricoes": [
-            {"nome": "Dor no joelho", "gravidade": "moderada"}
-        ],
-        "lesoes": [
-            {"regiao": "joelho", "gravidade": "moderada", "observacoes": "Menisco"}
-        ],
-        "disponibilidade_semanal": 4,
-        "dias_disponiveis": ["segunda", "terça", "quinta", "sexta"],
-        "cardio": "sim",
-        "alongamento": "sim",
-        "conversa_chat": "Gostaria de focar mais em membros superiores"
-    }
-    
-    logger.info("Preparando configuração do banco de dados para exemplo")
-    # Example database configuration
-    db_config = {
-        "host": "localhost",
-        "porta": 5432,
-        "usuario": "app_user",
-        "senha": "app_password",
-        "database": "training_app_db"
-    }
-    
-    logger.info("Executando pipeline de treinamento")
-    # Run the pipeline
-    try:
-        result = run_training_pipeline(api_key, user_data, db_config)
-        logger.info(f"Resultado do pipeline: {result['status']}")
+    if modo_teste:
+        # TESTE: Iniciar servidor Flask para modo de teste
+        logger.info("="*50)
+        logger.info("INICIANDO SERVIDOR EM MODO DE TESTE")
+        logger.info("="*50)
+        app.run(debug=True, host='0.0.0.0', port=5000)
+    else:
+        # Claude API key (get from environment variable for security)
+        api_key = os.environ.get("CLAUDE_API_KEY", "your_api_key_here")
+        if api_key == "your_api_key_here":
+            logger.warning("Nenhuma API_KEY encontrada, usando valor padrão (não funcionará)")
         
-        # Save result to file
+        logger.info("Preparando dados do usuário para exemplo")
+        # Example user data
+        user_data = {
+            "id": "user123",
+            "nome": "João Silva",
+            "idade": 30,
+            "data_nascimento": "1993-05-15",
+            "peso": 75,
+            "altura": 175,
+            "genero": "masculino",
+            "nivel": "intermediário",
+            "historico_treino": "3 anos de musculação",
+            "tempo_treino": 60,  # tempo disponível por sessão em minutos
+            "objetivos": [
+                {"nome": "Hipertrofia", "prioridade": 1},
+                {"nome": "Força", "prioridade": 2}
+            ],
+            "restricoes": [
+                {"nome": "Dor no joelho", "gravidade": "moderada"}
+            ],
+            "lesoes": [
+                {"regiao": "joelho", "gravidade": "moderada", "observacoes": "Menisco"}
+            ],
+            "disponibilidade_semanal": 4,
+            "dias_disponiveis": ["segunda", "terça", "quinta", "sexta"],
+            "cardio": "sim",
+            "alongamento": "sim",
+            "conversa_chat": "Gostaria de focar mais em membros superiores"
+        }
+        
+        logger.info("Preparando configuração do banco de dados para exemplo")
+        # Example database configuration
+        db_config = {
+            "host": "localhost",
+            "porta": 5432,
+            "usuario": "app_user",
+            "senha": "app_password",
+            "database": "training_app_db"
+        }
+        
+        logger.info("Executando pipeline de treinamento")
+        # Run the pipeline
         try:
-            with open("resultado_pipeline.json", "w", encoding="utf-8") as f:
-                json.dump(result, f, indent=2, ensure_ascii=False)
-                logger.info("Resultado salvo em arquivo: resultado_pipeline.json")
-        except Exception as e:
-            logger.warning(f"Não foi possível salvar o resultado em arquivo: {str(e)}")
+            result = run_training_pipeline(api_key, user_data, db_config)
+            logger.info(f"Resultado do pipeline: {result['status']}")
             
-    except Exception as e:
-        logger.critical(f"Erro ao executar pipeline: {str(e)}")
-        logger.critical(f"Traceback: {traceback.format_exc()}")
-    
-    logger.info("Script de integração concluído")
+            # Save result to file
+            try:
+                with open("resultado_pipeline.json", "w", encoding="utf-8") as f:
+                    json.dump(result, f, indent=2, ensure_ascii=False)
+                    logger.info("Resultado salvo em arquivo: resultado_pipeline.json")
+            except Exception as e:
+                logger.warning(f"Não foi possível salvar o resultado em arquivo: {str(e)}")
+                
+        except Exception as e:
+            logger.critical(f"Erro ao executar pipeline: {str(e)}")
+            logger.critical(f"Traceback: {traceback.format_exc()}")
+        
+        logger.info("Script de integração concluído")
