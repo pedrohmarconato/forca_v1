@@ -9,8 +9,12 @@ import os
 import traceback
 from typing import Dict, Any, List, Optional
 
-# Importar o WrapperLogger
-from logger import WrapperLogger
+# Importar o WrapperLogger e PathResolver
+from ..utils.logger import WrapperLogger
+from ..utils.path_resolver import (
+    get_prompt_path, get_schema_path,
+    load_file_with_fallback
+)
 
 class SistemaAdaptacao:
     def __init__(self):
@@ -54,39 +58,69 @@ class SistemaAdaptacao:
     def _carregar_prompt(self, arquivo_prompt: str) -> str:
         """Carrega o prompt do sistema de adaptação de um arquivo."""
         self.logger.info(f"Tentando carregar prompt do arquivo: {arquivo_prompt}")
-        try:
-            with open(arquivo_prompt, 'r', encoding='utf-8') as file:
-                prompt_content = file.read()
-                self.logger.debug(f"Prompt carregado com {len(prompt_content)} caracteres")
-                return prompt_content
-        except FileNotFoundError:
-            self.logger.error(f"Arquivo de prompt '{arquivo_prompt}' não encontrado")
-            raise FileNotFoundError(f"Arquivo de prompt '{arquivo_prompt}' não encontrado.")
+        
+        # Resolver caminho do arquivo de prompt
+        prompt_path = get_prompt_path(arquivo_prompt)
+        self.logger.debug(f"Caminho resolvido para o prompt: {prompt_path}")
+        
+        # Definir conteúdo de fallback
+        fallback_content = (
+            "# PROMPT DE ADAPTAÇÃO DO SISTEMA\n\n"
+            "Este é um prompt de fallback para quando o arquivo original "
+            "não puder ser carregado. Ele contém instruções básicas para "
+            "adaptação do treinamento."
+        )
+        
+        # Carregar arquivo com fallback
+        success, content = load_file_with_fallback(
+            prompt_path,
+            fallback_content=fallback_content
+        )
+        
+        if success:
+            self.logger.info(f"Prompt carregado com sucesso, {len(content)} caracteres")
+        else:
+            self.logger.warning(f"Usando conteúdo de fallback para o prompt {arquivo_prompt}")
+            
+        return content
     
     @WrapperLogger.log_function()
     def _carregar_schema_json(self) -> Dict:
         """Carrega o schema JSON para validação."""
         self.logger.info("Tentando carregar schema_wrapper2.json")
+        
+        # Resolver caminho do arquivo de schema
+        schema_path = get_schema_path("schema_wrapper2.json")
+        self.logger.debug(f"Caminho resolvido para o schema: {schema_path}")
+        
+        # Schema básico como fallback
+        schema_basico = {
+            "type": "object",
+            "required": ["treinamento_id", "versao", "data_criacao", "usuario", "plano_principal", "adaptacoes"],
+            "properties": {
+                "treinamento_id": {"type": "string"},
+                "versao": {"type": "string"},
+                "data_criacao": {"type": "string"},
+                "usuario": {"type": "object"},
+                "plano_principal": {"type": "object"},
+                "adaptacoes": {"type": "object"}
+            }
+        }
+        
         try:
-            with open("schema_wrapper2.json", 'r', encoding='utf-8') as file:
+            with open(schema_path, 'r', encoding='utf-8') as file:
                 schema = json.load(file)
                 self.logger.debug(f"Schema carregado com sucesso: {len(json.dumps(schema))} caracteres")
                 return schema
         except FileNotFoundError:
-            self.logger.warning("Arquivo schema_wrapper2.json não encontrado, criando schema básico")
-            # Cria um schema básico com base no formato esperado
-            return {
-                "type": "object",
-                "required": ["treinamento_id", "versao", "data_criacao", "usuario", "plano_principal", "adaptacoes"],
-                "properties": {
-                    "treinamento_id": {"type": "string"},
-                    "versao": {"type": "string"},
-                    "data_criacao": {"type": "string"},
-                    "usuario": {"type": "object"},
-                    "plano_principal": {"type": "object"},
-                    "adaptacoes": {"type": "object"}
-                }
-            }
+            self.logger.warning(f"Arquivo schema {schema_path} não encontrado, usando schema básico")
+            return schema_basico
+        except json.JSONDecodeError as e:
+            self.logger.error(f"Erro ao decodificar JSON do schema: {str(e)}")
+            return schema_basico
+        except Exception as e:
+            self.logger.error(f"Erro ao carregar schema: {str(e)}")
+            return schema_basico
     
     @WrapperLogger.log_function()
     def processar_plano(self, plano_principal: Dict[str, Any]) -> Dict[str, Any]:

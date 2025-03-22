@@ -1,15 +1,20 @@
-# Integration Script with Logs #
+# API e Integração para Sistema FORCA_V1 #
 
 import json
 import os
 import time
 import traceback
-from wrapper1 import TreinadorEspecialista 
-from wrapper2 import SistemaAdaptacao
-from wrapper3 import DistribuidorBD
-from logger import WrapperLogger
+from typing import Dict, Any, Optional
 
-def run_training_pipeline(api_key, user_data, db_config=None):
+# Importações dos wrappers
+from ..wrappers.treinador_especialista import TreinadorEspecialista
+from ..wrappers.sistema_adaptacao_treino import SistemaAdaptacao
+from ..wrappers.distribuidor_treinos import DistribuidorBD
+
+# Importar o módulo de logging
+from ..utils.logger import WrapperLogger
+
+def run_training_pipeline(api_key: str, user_data: Dict[str, Any], db_config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Execute the complete training pipeline using all three wrappers.
     
@@ -143,7 +148,7 @@ def run_training_pipeline(api_key, user_data, db_config=None):
             "traceback": traceback.format_exc()
         }
 
-# Example usage
+# Exemplo de uso do pipeline
 if __name__ == "__main__":
     logger = WrapperLogger("Main")
     logger.info("Iniciando script de integração")

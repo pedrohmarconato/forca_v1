@@ -10,8 +10,12 @@ import os
 import traceback
 import logging
 
-# Importar o WrapperLogger
-from logger import WrapperLogger
+# Importar o WrapperLogger e PathResolver
+from ..utils.logger import WrapperLogger
+from ..utils.path_resolver import (
+    get_prompt_path, get_schema_path, get_template_path,
+    load_file_with_fallback
+)
 
 class TreinadorEspecialista:
     def __init__(self, api_key: str, api_url: str = "https://api.anthropic.com/v1/messages"):
@@ -47,58 +51,69 @@ class TreinadorEspecialista:
     def _carregar_prompt(self, arquivo_prompt: str) -> str:
         """Carrega o prompt do treinador especialista de um arquivo."""
         self.logger.info(f"Tentando carregar prompt do arquivo: {arquivo_prompt}")
-        try:
-            with open(arquivo_prompt, 'r', encoding='utf-8') as file:
-                prompt_content = file.read()
-                self.logger.debug(f"Prompt carregado com {len(prompt_content)} caracteres")
-                return prompt_content
-        except FileNotFoundError:
-            self.logger.error(f"Arquivo de prompt '{arquivo_prompt}' não encontrado")
-            # Tentar caminho alternativo
-            alt_path = os.path.basename(arquivo_prompt)
-            self.logger.info(f"Tentando caminho alternativo: {alt_path}")
-            try:
-                with open(alt_path, 'r', encoding='utf-8') as file:
-                    prompt_content = file.read()
-                    self.logger.info(f"Prompt carregado do caminho alternativo com sucesso")
-                    return prompt_content
-            except FileNotFoundError:
-                self.logger.critical(f"Prompt não encontrado também no caminho alternativo")
-                raise FileNotFoundError(f"Arquivo de prompt '{arquivo_prompt}' não encontrado.")
+        
+        # Resolver caminho do arquivo de prompt
+        prompt_path = get_prompt_path(arquivo_prompt)
+        self.logger.debug(f"Caminho resolvido para o prompt: {prompt_path}")
+        
+        # Carregar arquivo com fallback
+        success, content = load_file_with_fallback(
+            prompt_path,
+            fallback_content=f"TEMPLATE BÁSICO DO PROMPT (fallback para '{arquivo_prompt}')\n\nPor favor, forneça detalhes para criar um plano de treinamento personalizado."
+        )
+        
+        if success:
+            self.logger.info(f"Prompt carregado com sucesso, {len(content)} caracteres")
+        else:
+            self.logger.warning(f"Usando conteúdo de fallback para o prompt {arquivo_prompt}")
+            
+        return content
     
     @WrapperLogger.log_function(logging.INFO)
     def _carregar_schema_json(self) -> Dict:
         """Carrega o schema JSON para validação."""
         self.logger.info("Tentando carregar schema_wrapper1.json")
+        
+        # Resolver caminho do arquivo de schema
+        schema_path = get_schema_path("schema_wrapper1.json")
+        self.logger.debug(f"Caminho resolvido para o schema: {schema_path}")
+        
+        # Schema básico como fallback
+        schema_basico = {
+            "type": "object",
+            "required": ["treinamento_id", "versao", "data_criacao", "usuario", "plano_principal"],
+            "properties": {
+                "treinamento_id": {"type": "string"},
+                "versao": {"type": "string"},
+                "data_criacao": {"type": "string"},
+                "usuario": {
+                    "type": "object",
+                    "required": ["id", "nome", "nivel", "objetivos", "restricoes"],
+                    "properties": {
+                        "id": {"type": "string"},
+                        "nome": {"type": "string"},
+                        "nivel": {"type": "string"},
+                        "objetivos": {"type": "array"},
+                        "restricoes": {"type": "array"}
+                    }
+                },
+                "plano_principal": {"type": "object"}
+            }
+        }
+        
         try:
-            with open("schema_wrapper1.json", 'r', encoding='utf-8') as file:
+            with open(schema_path, 'r', encoding='utf-8') as file:
                 schema = json.load(file)
-                self.logger.debug(f"Schema carregado com sucesso: {len(schema)} elementos de topo")
+                self.logger.debug(f"Schema carregado com sucesso: {len(schema.keys() if isinstance(schema, dict) else schema)} elementos")
                 return schema
         except FileNotFoundError:
-            self.logger.warning("Arquivo schema_wrapper1.json não encontrado, criando schema básico")
-            # Cria um schema básico com base no formato esperado
-            schema_basico = {
-                "type": "object",
-                "required": ["treinamento_id", "versao", "data_criacao", "usuario", "plano_principal"],
-                "properties": {
-                    "treinamento_id": {"type": "string"},
-                    "versao": {"type": "string"},
-                    "data_criacao": {"type": "string"},
-                    "usuario": {
-                        "type": "object",
-                        "required": ["id", "nome", "nivel", "objetivos", "restricoes"],
-                        "properties": {
-                            "id": {"type": "string"},
-                            "nome": {"type": "string"},
-                            "nivel": {"type": "string"},
-                            "objetivos": {"type": "array"},
-                            "restricoes": {"type": "array"}
-                        }
-                    },
-                    "plano_principal": {"type": "object"}
-                }
-            }
+            self.logger.warning(f"Arquivo schema {schema_path} não encontrado, usando schema básico")
+            return schema_basico
+        except json.JSONDecodeError as e:
+            self.logger.error(f"Erro ao decodificar JSON do schema: {str(e)}")
+            return schema_basico
+        except Exception as e:
+            self.logger.error(f"Erro ao carregar schema: {str(e)}")
             return schema_basico
     
     @WrapperLogger.log_function(logging.INFO)
@@ -291,40 +306,50 @@ class TreinadorEspecialista:
     def _obter_template_json(self) -> str:
         """Retorna um template do JSON esperado."""
         self.logger.info("Obtendo template JSON")
-        try:
-            with open("JSON para Wrapper 1 Treinador.txt", 'r', encoding='utf-8') as file:
-                template = file.read()
-                self.logger.debug(f"Template JSON carregado do arquivo com {len(template)} caracteres")
-                return template
-        except FileNotFoundError:
-            self.logger.warning("Arquivo de template JSON não encontrado, usando template simplificado")
-            # Template simplificado caso o arquivo não seja encontrado
-            template_simplificado = """
-            {
-              "treinamento_id": "",
-              "versao": "",
-              "data_criacao": "",
-              "usuario": {
-                "id": "",
-                "nome": "",
-                "nivel": "",
-                "objetivos": [],
-                "restricoes": []
-              },
-              "plano_principal": {
-                "nome": "",
-                "descricao": "",
-                "periodizacao": {
-                  "tipo": "",
-                  "descricao": ""
-                },
-                "duracao_semanas": null,
-                "frequencia_semanal": null,
-                "ciclos": []
-              }
-            }
-            """
-            return template_simplificado
+        
+        # Resolver caminho do arquivo de template
+        template_path = get_template_path("JSON para Wrapper 1 Treinador.txt")
+        self.logger.debug(f"Caminho resolvido para o template: {template_path}")
+        
+        # Template simplificado como fallback
+        template_simplificado = """
+        {
+          "treinamento_id": "",
+          "versao": "",
+          "data_criacao": "",
+          "usuario": {
+            "id": "",
+            "nome": "",
+            "nivel": "",
+            "objetivos": [],
+            "restricoes": []
+          },
+          "plano_principal": {
+            "nome": "",
+            "descricao": "",
+            "periodizacao": {
+              "tipo": "",
+              "descricao": ""
+            },
+            "duracao_semanas": null,
+            "frequencia_semanal": null,
+            "ciclos": []
+          }
+        }
+        """
+        
+        # Carregar arquivo com fallback
+        success, content = load_file_with_fallback(
+            template_path,
+            fallback_content=template_simplificado
+        )
+        
+        if success:
+            self.logger.info(f"Template JSON carregado com sucesso, {len(content)} caracteres")
+        else:
+            self.logger.warning("Usando template JSON simplificado como fallback")
+            
+        return content
     
     @WrapperLogger.log_function(logging.INFO)
     def _fazer_requisicao_claude(self, prompt: str) -> Dict[str, Any]:

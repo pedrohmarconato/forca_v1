@@ -7,11 +7,18 @@ import datetime
 import jsonschema
 import os
 import traceback
-from typing import Dict, Any, List, Tuple, Optional
+import time
+from typing import Dict, Any, List, Tuple, Optional, Union
 from dataclasses import dataclass, field
 
-# Importar o WrapperLogger
-from logger import WrapperLogger
+# Importar o WrapperLogger e PathResolver
+from ..utils.logger import WrapperLogger
+from ..utils.path_resolver import (
+    get_schema_path,
+    load_file_with_fallback
+)
+from ..utils.config import get_supabase_config, get_db_config
+from ..wrappers.supabase_client import SupabaseWrapper
 
 @dataclass
 class TabelaMapping:
@@ -20,19 +27,30 @@ class TabelaMapping:
 
 
 class DistribuidorBD:
-    def __init__(self, config_db: Optional[Dict[str, Any]] = None):
+    def __init__(self, config_db: Optional[Dict[str, Any]] = None, modo_simulacao: bool = False):
         """
         Inicializa o Distribuidor de Treinos para o BD.
         
         Args:
             config_db (Dict, optional): Configuração de conexão com o banco de dados
+            modo_simulacao (bool): Se True, opera em modo de simulação sem conexão real
         """
         # Configurar logger
         self.logger = WrapperLogger("Wrapper3_Distribuidor")
         self.logger.info("Inicializando Distribuidor BD")
         
-        self.config_db = config_db or {}
-        self.logger.debug("Configuração de BD fornecida" if config_db else "Nenhuma configuração de BD fornecida")
+        # Flag para controlar o modo de simulação
+        self.modo_simulacao = modo_simulacao
+        if self.modo_simulacao:
+            self.logger.info("Inicializando em MODO SIMULAÇÃO (sem conexão real com banco)")
+        
+        # Obter configuração de BD
+        self.config_db = config_db or get_db_config()
+        
+        if not config_db:
+            self.logger.debug("Configuração de BD não fornecida, usando configuração padrão")
+        else:
+            self.logger.debug("Usando configuração de BD fornecida explicitamente")
         
         try:
             self.schema = self._carregar_schema_json()
@@ -50,7 +68,26 @@ class DistribuidorBD:
             self.logger.error(f"Erro ao criar mapeamento de tabelas: {str(e)}")
             raise
         
+        # Inicializar conexão
         self.conexao_db = None
+        self.supabase_client = None
+        
+        # Tentar estabelecer conexão com o banco se não estiver em modo simulação
+        if not self.modo_simulacao:
+            try:
+                self._inicializar_conexao()
+            except Exception as e:
+                self.logger.warning(f"Não foi possível estabelecer conexão inicial com o banco: {str(e)}")
+                self.logger.warning("Operando em modo de contingência (conexão será tentada novamente quando necessário)")
+        
+        # Métricas de operação
+        self.metricas = {
+            "operacoes_totais": 0,
+            "operacoes_sucesso": 0,
+            "operacoes_falha": 0,
+            "ultima_operacao": None,
+            "tempo_total_operacoes": 0
+        }
         
         # Níveis de humor atualizados para 5 níveis
         self.niveis_humor = ["muito_cansado", "cansado", "neutro", "disposto", "muito_disposto"]
@@ -59,6 +96,40 @@ class DistribuidorBD:
         self.tempos_disponiveis = ["muito_curto", "curto", "padrao", "longo", "muito_longo"]
         
         self.logger.info("Distribuidor BD inicializado com sucesso")
+    
+    def _inicializar_conexao(self) -> None:
+        """
+        Inicializa a conexão com o Supabase.
+        """
+        self.logger.info("Inicializando conexão com Supabase")
+        
+        supabase_config = get_supabase_config()
+        
+        # Verificar se temos as configurações mínimas
+        if not supabase_config.get('url') or not supabase_config.get('api_key'):
+            self.logger.error("Configuração Supabase incompleta: URL ou API Key não fornecidos")
+            raise ValueError("Configuração Supabase incompleta: URL ou API Key não fornecidos")
+        
+        try:
+            self.supabase_client = SupabaseWrapper(
+                url=supabase_config.get('url'),
+                api_key=supabase_config.get('api_key')
+            )
+            
+            # Registrar que temos uma conexão
+            self.conexao_db = {
+                "status": "connected",
+                "tipo": "supabase",
+                "url": supabase_config.get('url'),
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+            
+            self.logger.info("Conexão com Supabase estabelecida com sucesso")
+            
+        except Exception as e:
+            self.logger.error(f"Erro ao inicializar cliente Supabase: {str(e)}")
+            self.logger.error(traceback.format_exc())
+            raise ValueError(f"Falha na conexão com Supabase: {str(e)}")
     
     def _criar_schema_padrao(self) -> Dict:
         """Cria um schema básico quando o arquivo não é encontrado"""
@@ -81,15 +152,25 @@ class DistribuidorBD:
     def _carregar_schema_json(self) -> Dict:
         """Carrega o schema JSON para validação."""
         self.logger.info("Tentando carregar schema_wrapper3.json")
+        
+        # Resolver caminho do arquivo de schema
+        schema_path = get_schema_path("schema_wrapper3.json")
+        self.logger.debug(f"Caminho resolvido para o schema: {schema_path}")
+        
         try:
-            with open("schema_wrapper3.json", 'r', encoding='utf-8') as file:
+            with open(schema_path, 'r', encoding='utf-8') as file:
                 schema = json.load(file)
                 self.logger.debug(f"Schema carregado com sucesso: {len(json.dumps(schema))} caracteres")
                 return schema
         except FileNotFoundError:
-            self.logger.warning("Arquivo schema_wrapper3.json não encontrado, será criado um schema básico")
-            # Retornar None para que a função _criar_schema_padrao seja chamada
-            return None
+            self.logger.warning(f"Arquivo schema {schema_path} não encontrado, será criado um schema básico")
+            return self._criar_schema_padrao()
+        except json.JSONDecodeError as e:
+            self.logger.error(f"Erro ao decodificar JSON do schema: {str(e)}")
+            return self._criar_schema_padrao()
+        except Exception as e:
+            self.logger.error(f"Erro ao carregar schema: {str(e)}")
+            return self._criar_schema_padrao()
     
     @WrapperLogger.log_function()
     def _criar_mapeamento_tabelas(self) -> Dict[str, TabelaMapping]:
@@ -812,76 +893,252 @@ class DistribuidorBD:
         return resultado
     
     @WrapperLogger.log_function()
-    def _executar_comandos_db(self, comandos: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _executar_comandos_db(self, comandos: List[Dict[str, Any]], retry_count: int = 3, timeout: int = 15) -> Dict[str, Any]:
         """
-        Executa os comandos no banco de dados.
+        Executa os comandos no banco de dados ou simula a execução.
         
         Args:
             comandos (List): Lista de comandos a serem executados
+            retry_count (int): Número de tentativas em caso de falha temporária
+            timeout (int): Tempo limite em segundos para cada operação
             
         Returns:
             Dict: Resultado da execução
         """
-        # Se não tiver conexão com o banco, apenas retorna os comandos
-        if not self.conexao_db:
-            self.logger.info("Sem conexão com o banco de dados, retornando comandos para simulação")
+        # Reinicializar métricas para esta execução
+        execucao_metricas = {
+            "inicio": time.time(),
+            "operacoes_sucesso": 0,
+            "operacoes_falha": 0,
+            "total_comandos": len(comandos),
+            "tabelas": {}
+        }
+        
+        # Verificar se temos conexão com o banco
+        if not self._verificar_conexao():
+            self.logger.warning("Não foi possível estabelecer conexão com o banco de dados")
+            
+            # Incrementar métricas
+            self.metricas["operacoes_totais"] += 1
+            self.metricas["operacoes_falha"] += 1
+            self.metricas["ultima_operacao"] = "falha_conexao"
+            
             return {
                 "status": "simulated",
-                "mensagem": "Comandos gerados para simulação",
+                "mensagem": "Comandos gerados para simulação devido à falha de conexão",
                 "comandos": comandos
             }
         
-        # Em um cenário real, aqui seriam executados os comandos no banco de dados
-        # Usando a conexão self.conexao_db
-        self.logger.info(f"Simulando execução de {len(comandos)} comandos no banco de dados")
+        # Se estamos em modo de simulação (deliberada ou fallback)
+        if self.modo_simulacao or (self.conexao_db and self.conexao_db.get("status") == "simulated"):
+            self.logger.info(f"Modo simulação: processando {len(comandos)} comandos")
+            
+            # Contabilizar estatísticas de comandos por tabela
+            estatisticas = {}
+            for comando in comandos:
+                tabela = comando.get("tabela", "desconhecida")
+                if tabela not in estatisticas:
+                    estatisticas[tabela] = 0
+                estatisticas[tabela] += 1
+            
+            for tabela, contagem in estatisticas.items():
+                self.logger.info(f"Tabela {tabela}: {contagem} comandos")
+                
+            # Incrementar métricas
+            self.metricas["operacoes_totais"] += 1
+            self.metricas["operacoes_sucesso"] += 1
+            self.metricas["ultima_operacao"] = "simulada"
+            
+            return {
+                "status": "simulated",
+                "mensagem": f"Simulados {len(comandos)} comandos no banco de dados",
+                "comandos_executados": len(comandos),
+                "estatisticas": estatisticas
+            }
         
-        # Log de estatísticas de comandos por tabela
+        # Execução real com Supabase
+        self.logger.info(f"Executando {len(comandos)} comandos no banco de dados")
+        inicio_execucao = time.time()
+        
+        # Resultados e estatísticas
+        resultados = []
         estatisticas = {}
+        comandos_executados = 0
+        comandos_falha = 0
+        
+        # Executar cada comando
         for comando in comandos:
             tabela = comando.get("tabela", "desconhecida")
+            operacao = comando.get("operacao", "INSERT")
+            dados = comando.get("dados", {})
+            filtros = comando.get("where", {})
+            
+            # Atualizar estatísticas
             if tabela not in estatisticas:
-                estatisticas[tabela] = 0
-            estatisticas[tabela] += 1
+                estatisticas[tabela] = {"total": 0, "sucesso": 0, "falha": 0}
+            estatisticas[tabela]["total"] += 1
+            
+            # Contabilizar nas métricas da execução
+            if tabela not in execucao_metricas["tabelas"]:
+                execucao_metricas["tabelas"][tabela] = 0
+            execucao_metricas["tabelas"][tabela] += 1
+            
+            # Tentar execução com retry
+            resultado = None
+            tentativas = 0
+            
+            while tentativas < retry_count and resultado is None:
+                tentativas += 1
+                
+                try:
+                    if operacao == "INSERT":
+                        resultado = self.supabase_client.insert_data(tabela, dados)
+                    elif operacao == "UPDATE":
+                        resultado = self.supabase_client.update_data(tabela, dados, filtros)
+                    elif operacao == "DELETE":
+                        resultado = self.supabase_client.delete_data(tabela, filtros)
+                    else:
+                        self.logger.warning(f"Operação desconhecida: {operacao}, tratando como INSERT")
+                        resultado = self.supabase_client.insert_data(tabela, dados)
+                    
+                    # Verificar se a operação foi bem-sucedida
+                    if resultado.get("status") == "success":
+                        self.logger.debug(f"Comando executado com sucesso: {tabela} ({operacao})")
+                        comandos_executados += 1
+                        estatisticas[tabela]["sucesso"] += 1
+                        execucao_metricas["operacoes_sucesso"] += 1
+                    else:
+                        # Falha na operação
+                        self.logger.error(f"Falha ao executar comando: {resultado.get('message', 'Erro desconhecido')}")
+                        if tentativas < retry_count:
+                            self.logger.info(f"Tentativa {tentativas}/{retry_count} - retrying...")
+                            resultado = None  # Reset para retry
+                            time.sleep(1)  # Esperar um pouco antes de tentar novamente
+                        else:
+                            self.logger.error(f"Falha após {retry_count} tentativas")
+                            comandos_falha += 1
+                            estatisticas[tabela]["falha"] += 1
+                            execucao_metricas["operacoes_falha"] += 1
+                
+                except Exception as e:
+                    self.logger.error(f"Erro ao executar comando: {str(e)}")
+                    if tentativas < retry_count:
+                        self.logger.info(f"Tentativa {tentativas}/{retry_count} - retrying...")
+                        time.sleep(1)  # Esperar um pouco antes de tentar novamente
+                    else:
+                        self.logger.error(f"Falha após {retry_count} tentativas: {str(e)}")
+                        resultado = {"status": "error", "message": str(e)}
+                        comandos_falha += 1
+                        estatisticas[tabela]["falha"] += 1
+                        execucao_metricas["operacoes_falha"] += 1
+            
+            # Adicionar resultado às estatísticas
+            resultados.append({
+                "tabela": tabela,
+                "operacao": operacao,
+                "resultado": resultado.get("status") if resultado else "timeout",
+                "id": dados.get("id", None)
+            })
         
-        for tabela, contagem in estatisticas.items():
-            self.logger.info(f"Tabela {tabela}: {contagem} comandos")
+        # Calcular tempo de execução
+        tempo_execucao = time.time() - inicio_execucao
         
+        # Atualizar métricas globais
+        self.metricas["operacoes_totais"] += 1
+        self.metricas["operacoes_sucesso"] += 1 if comandos_falha == 0 else 0
+        self.metricas["operacoes_falha"] += 1 if comandos_falha > 0 else 0
+        self.metricas["ultima_operacao"] = "success" if comandos_falha == 0 else "falha_parcial"
+        self.metricas["tempo_total_operacoes"] += tempo_execucao
+        
+        # Log de resumo
+        for tabela, stats in estatisticas.items():
+            self.logger.info(f"Tabela {tabela}: {stats['total']} comandos, {stats['sucesso']} sucesso, {stats['falha']} falha")
+        
+        self.logger.info(f"Execução concluída em {tempo_execucao:.2f} segundos")
+        
+        # Retornar resultado completo
         return {
-            "status": "success",
-            "mensagem": f"Executados {len(comandos)} comandos no banco de dados",
-            "comandos_executados": len(comandos),
-            "estatisticas": estatisticas
+            "status": "success" if comandos_falha == 0 else "partial_success",
+            "mensagem": f"Executados {comandos_executados} comandos com sucesso, {comandos_falha} falhas",
+            "comandos_executados": comandos_executados,
+            "comandos_falha": comandos_falha,
+            "tempo_execucao": tempo_execucao,
+            "estatisticas": estatisticas,
+            "resultados": resultados
         }
     
     @WrapperLogger.log_function()
-    def conectar_bd(self, config: Dict[str, Any]) -> None:
+    def conectar_bd(self, config: Dict[str, Any], force_simulation: bool = False) -> None:
         """
-        Estabelece conexão com o banco de dados.
+        Estabelece conexão com o banco de dados Supabase.
         
         Args:
             config (Dict): Configuração de conexão
+            force_simulation (bool): Se True, força o modo de simulação mesmo com credenciais válidas
         """
-        self.logger.info("Tentando estabelecer conexão com o banco de dados")
+        self.logger.info("Tentando estabelecer conexão com o banco de dados Supabase")
         
-        # Validar configuração mínima
-        campos_obrigatorios = ["host", "porta", "usuario", "database"]
-        campos_ausentes = [campo for campo in campos_obrigatorios if campo not in config]
+        # Verificar se estamos em modo de simulação forçado
+        if self.modo_simulacao or force_simulation:
+            self.logger.info("Modo de simulação ativo - simulando conexão")
+            self.conexao_db = {
+                "status": "simulated",
+                "config": {k: v if k != "senha" else "***REDACTED***" for k, v in config.items()},
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+            self.logger.info("Conexão simulada configurada com sucesso")
+            return
         
-        if campos_ausentes:
-            self.logger.error(f"Configuração de BD incompleta. Campos ausentes: {', '.join(campos_ausentes)}")
-            raise ValueError(f"Configuração de BD incompleta. Campos ausentes: {', '.join(campos_ausentes)}")
+        # Se já tivermos uma conexão, verificar se precisamos reconectar
+        if self.conexao_db and self.supabase_client:
+            self.logger.info("Conexão já estabelecida, verificando se reconexão é necessária")
+            
+            # Se a configuração é diferente, reconectar
+            if config.get('url') != self.conexao_db.get('url'):
+                self.logger.info("Nova URL detectada, reconectando")
+                self.desconectar_bd()
+            else:
+                self.logger.info("Usando conexão existente")
+                return
         
-        # Em um cenário real, esta função estabeleceria a conexão com o banco
-        # usando os parâmetros de configuração
-        self.logger.info(f"Simulando conexão com BD em {config.get('host')}:{config.get('porta')}")
-        self.logger.debug(f"Database: {config.get('database')}, Usuário: {config.get('usuario')}")
-        
-        self.conexao_db = {
-            "status": "connected",
-            "config": {k: v if k != "senha" else "***REDACTED***" for k, v in config.items()}
-        }
-        
-        self.logger.info("Conexão com o banco de dados estabelecida com sucesso")
+        # Tentar estabelecer conexão real com Supabase
+        try:
+            # Podemos usar URL e API key diretamente do config fornecido ou do config global
+            url = config.get('url') or get_supabase_config().get('url')
+            api_key = config.get('api_key') or get_supabase_config().get('api_key')
+            
+            if not url or not api_key:
+                self.logger.error("URL ou API key do Supabase não fornecidos")
+                raise ValueError("URL e API key do Supabase são obrigatórios para conectar")
+            
+            self.logger.info(f"Conectando ao Supabase: {url}")
+            
+            # Inicializar cliente Supabase
+            self.supabase_client = SupabaseWrapper(url=url, api_key=api_key)
+            
+            # Registrar conexão bem-sucedida
+            self.conexao_db = {
+                "status": "connected",
+                "tipo": "supabase",
+                "url": url,
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+            
+            self.logger.info("Conexão com Supabase estabelecida com sucesso")
+            
+        except Exception as e:
+            self.logger.error(f"Erro ao conectar com Supabase: {str(e)}")
+            self.logger.error(traceback.format_exc())
+            
+            # Configurar modo de simulação como fallback
+            self.logger.warning("Utilizando modo de simulação como fallback")
+            self.conexao_db = {
+                "status": "simulated",
+                "fallback": True,
+                "error": str(e),
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+            self.supabase_client = None
     
     @WrapperLogger.log_function()
     def desconectar_bd(self) -> None:
@@ -889,8 +1146,52 @@ class DistribuidorBD:
         if not self.conexao_db:
             self.logger.warning("Tentativa de desconexão sem conexão ativa")
             return
-            
-        self.logger.info("Encerrando conexão com o banco de dados")
-        # Em um cenário real, esta função encerraria a conexão
+        
+        tipo_conexao = self.conexao_db.get("status", "unknown")    
+        self.logger.info(f"Encerrando conexão {tipo_conexao} com o banco de dados")
+        
+        # Descartar as referências de conexão
         self.conexao_db = None
+        self.supabase_client = None
+        
         self.logger.info("Conexão com o banco de dados encerrada com sucesso")
+    
+    def _verificar_conexao(self) -> bool:
+        """
+        Verifica se há uma conexão válida com o banco de dados.
+        Se não houver, tenta estabelecê-la.
+        
+        Returns:
+            bool: True se a conexão está disponível (real ou simulada), False caso contrário
+        """
+        # Se estamos em modo de simulação, sempre retorna True
+        if self.modo_simulacao:
+            if not self.conexao_db:
+                self.logger.debug("Sem conexão em modo de simulação, configurando simulação")
+                self.conexao_db = {
+                    "status": "simulated",
+                    "timestamp": datetime.datetime.now().isoformat()
+                }
+            return True
+        
+        # Se já temos uma conexão real, verificar se é válida
+        if self.conexao_db and self.conexao_db.get("status") == "connected" and self.supabase_client:
+            self.logger.debug("Conexão com o banco já estabelecida")
+            return True
+        
+        # Se não temos conexão ou está em modo simulado por fallback, tentar estabelecer
+        self.logger.info("Sem conexão ativa com o banco, tentando estabelecer")
+        try:
+            self._inicializar_conexao()
+            return True
+        except Exception as e:
+            self.logger.error(f"Não foi possível estabelecer conexão: {str(e)}")
+            self.logger.warning("Operando em modo de simulação por falta de conexão")
+            self.conexao_db = {
+                "status": "simulated",
+                "fallback": True,
+                "error": str(e),
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+            return True  # Retorna True mesmo assim para permitir a simulação
+        

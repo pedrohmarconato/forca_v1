@@ -1,1 +1,11 @@
-a
+# Requisitos da API
+python-dotenv==1.0.1
+requests==2.31.0
+jsonschema==4.21.1
+anthropic==0.16.0
+supabase-py==2.3.0
+fastapi==0.111.0
+uvicorn==0.27.1
+pydantic==2.5.2
+structlog==23.2.0
+rich==13.7.0
