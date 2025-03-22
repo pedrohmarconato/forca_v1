@@ -1,6 +1,29 @@
+# Dependências e ambiente virtual
 frontend/node_modules/
+venv/
 **/__pycache__/
 **/*.pyc
-venv/
-backend/logs/
 **/.cache/
+
+# Logs e arquivos de dados
+backend/logs/
+*.log
+
+# Arquivos de configuração com informações sensíveis
+.env
+.env.local
+*.env
+
+# Chaves de API e arquivos de configuração com segredos
+**/config.py
+**/Questionario.js
+
+# Arquivos específicos do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos de IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
