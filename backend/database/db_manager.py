@@ -314,6 +314,69 @@ def testar_conexao(args):
         logger.error(traceback.format_exc())
         return 1
 
+def inicializar_sistema(args):
+    """
+    Comando para inicializar todo o sistema FORCA.
+    
+    Args:
+        args: Argumentos de linha de comando
+    """
+    print("\n=== Inicialização do Sistema FORCA ===\n")
+    
+    try:
+        # Importar função de inicialização do sistema
+        from integration_script import initialize_system
+        
+        print("Iniciando inicialização do sistema completo...")
+        
+        # Inicializar sistema
+        resultado = initialize_system(init_db=True, force_reset=args.reset)
+        
+        # Exibir resumo do resultado
+        status = resultado["status"]
+        componentes = len(resultado["componentes"])
+        erros = len(resultado["erros"])
+        
+        print(f"\nStatus da inicialização: {status.upper()}")
+        print(f"Componentes inicializados: {componentes}")
+        
+        # Exibir detalhes de cada componente
+        print("\nDetalhes por componente:")
+        for nome, info in resultado["componentes"].items():
+            status_comp = info.get("status", "unknown")
+            status_icon = "✅" if status_comp == "success" else "❌"
+            print(f"{status_icon} {nome}: {info.get('message', status_comp)}")
+            
+            # Exibir detalhes adicionais para banco de dados
+            if nome == "banco_dados" and status_comp == "success" and "detalhes" in info:
+                detalhes = info["detalhes"]
+                print(f"   - Tabelas criadas: {detalhes.get('tabelas_criadas', 0)}")
+                print(f"   - Índices criados: {detalhes.get('indices_criados', 0)}")
+                print(f"   - Funções criadas: {detalhes.get('funcoes_criadas', 0)}")
+                print(f"   - Triggers criados: {detalhes.get('triggers_criados', 0)}")
+        
+        # Exibir erros se houver
+        if erros > 0:
+            print(f"\nErros encontrados ({erros}):")
+            for i, erro in enumerate(resultado["erros"][:3], 1):
+                print(f"  {i}. {erro[:200]}...")
+            if erros > 3:
+                print(f"  ... e mais {erros - 3} erro(s)")
+        
+        # Retornar código de saída apropriado
+        return 0 if status == "success" else 1
+    
+    except ImportError as e:
+        print(f"\nErro ao importar módulo: {str(e)}")
+        print("Verifique se o arquivo integration_script.py existe e está no diretório correto.")
+        logger.error(f"Erro ao importar integration_script: {str(e)}")
+        return 1
+    except Exception as e:
+        print(f"\nErro ao inicializar sistema: {str(e)}")
+        logger.error(f"Erro ao inicializar sistema: {str(e)}")
+        logger.error(traceback.format_exc())
+        return 1
+
 def main():
     """Função principal para execução do script."""
     parser = argparse.ArgumentParser(
@@ -327,6 +390,8 @@ Exemplos de uso:
   db_manager.py migrate                  # Migra todos os planos disponíveis
   db_manager.py migrate --file plano.json # Migra apenas um arquivo específico
   db_manager.py testconn                 # Testa a conexão com o Supabase
+  db_manager.py init-system              # Inicializa todo o sistema FORCA (wrappers e banco)
+  db_manager.py init-system --reset      # Inicializa o sistema com reset do banco
         """
     )
     
@@ -353,6 +418,10 @@ Exemplos de uso:
     # Comando testconn
     testconn_parser = subparsers.add_parser('testconn', help='Testa a conexão com o Supabase')
     
+    # Comando init-system
+    init_system_parser = subparsers.add_parser('init-system', help='Inicializa todo o sistema FORCA (wrappers e banco de dados)')
+    init_system_parser.add_argument('--reset', action='store_true', help='Força reset completo das tabelas do banco de dados')
+    
     # Processar argumentos
     args = parser.parse_args()
     
@@ -366,6 +435,8 @@ Exemplos de uso:
         return migrar_dados(args)
     elif args.comando == 'testconn':
         return testar_conexao(args)
+    elif args.comando == 'init-system':
+        return inicializar_sistema(args)
     else:
         parser.print_help()
         return 0

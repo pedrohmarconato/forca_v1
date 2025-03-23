@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "required": ["treinamento_id", "plano_principal", "usuario"],
+  "properties": {
+    "treinamento_id": {"type": "string"},
+    "usuario": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string"},
+        "nome": {"type": "string"},
+        "idade": {"type": "integer"},
+        "genero": {"type": "string"},
+        "nivel": {"type": "string"}
+      }
+    },
+    "plano_principal": {
+      "type": "object",
+      "properties": {
+        "nome": {"type": "string"},
+        "descricao": {"type": "string"},
+        "duracao_semanas": {"type": "integer"},
+        "frequencia_semanal": {"type": "integer"},
+        "ciclos": {"type": "array"}
+      }
+    }
+  }
+}

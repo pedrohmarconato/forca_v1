@@ -1,0 +1,489 @@
+{
+  "treinamento_id": "ab0575a8-655b-4513-aeec-57fd15ae9574",
+  "versao": "1.0",
+  "data_criacao": "2025-03-22T23:54:19.116961",
+  "usuario": {
+    "id": "user123",
+    "nome": "João Silva",
+    "nivel": "intermediário",
+    "objetivos": [
+      {
+        "objetivo_id": "OBJ00001",
+        "nome": "Hipertrofia",
+        "prioridade": 1
+      },
+      {
+        "objetivo_id": "OBJ00002",
+        "nome": "Força",
+        "prioridade": 2
+      }
+    ],
+    "restricoes": [
+      {
+        "restricao_id": "RES00001",
+        "nome": "Dor no joelho",
+        "gravidade": "moderada"
+      }
+    ]
+  },
+  "plano_principal": {
+    "nome": "Plano de Treinamento de 12 Semanas",
+    "descricao": "Plano para ganho de hipertrofia e força com foco em membros superiores",
+    "periodizacao": {
+      "tipo": "Linear",
+      "descricao": "Periodização Linear com aumento gradual de intensidade e volume"
+    },
+    "duracao_semanas": 12,
+    "frequencia_semanal": 4,
+    "ciclos": [
+      {
+        "ciclo_id": "CIC00001",
+        "nome": "Hipertrofia e Força",
+        "ordem": 1,
+        "duracao_semanas": 12,
+        "objetivo": "Ganho de massa muscular e força com foco em membros superiores",
+        "microciclos": [
+          {
+            "semana": 1,
+            "volume": "Moderado",
+            "intensidade": "Baixa",
+            "foco": "Adaptação e Técnica",
+            "sessoes": [
+              {
+                "sessao_id": "SES00001",
+                "nome": "Treino A - Teste de Força",
+                "tipo": "Resistência",
+                "duracao_minutos": 60,
+                "nivel_intensidade": null,
+                "dia_semana": "segunda",
+                "grupos_musculares": [
+                  {
+                    "grupo_id": "GRP00001",
+                    "nome": "Peito",
+                    "prioridade": 2
+                  },
+                  {
+                    "grupo_id": "GRP00002",
+                    "nome": "Costas",
+                    "prioridade": 1
+                  },
+                  {
+                    "grupo_id": "GRP00003",
+                    "nome": "Ombros",
+                    "prioridade": 1
+                  },
+                  {
+                    "grupo_id": "GRP00004",
+                    "nome": "Bíceps",
+                    "prioridade": 2
+                  }
+                ],
+                "exercicios": [
+                  {
+                    "exercicio_id": "EXE00001",
+                    "nome": "Supino Reto com Barra",
+                    "ordem": 1,
+                    "equipamento": "Barra",
+                    "series": 3,
+                    "repeticoes": "Testar 1RM",
+                    "percentual_rm": null,
+                    "tempo_descanso": "3-5min",
+                    "cadencia": "2020",
+                    "metodo": "Piramidal",
+                    "progressao": [],
+                    "observacoes": "Fazer aquecimento com cargas leves"
+                  },
+                  {
+                    "exercicio_id": "EXE00002",
+                    "nome": "Barra Fixa",
+                    "ordem": 2,
+                    "equipamento": "Barra fixa",
+                    "series": 3,
+                    "repeticoes": "Testar 1RM",
+                    "percentual_rm": null,
+                    "tempo_descanso": "3-5min",
+                    "cadencia": "",
+                    "metodo": "Piramidal",
+                    "progressao": [],
+                    "observacoes": "Fazer variações se necessário"
+                  },
+                  {
+                    "exercicio_id": "EXE00003",
+                    "nome": "Desenvolvimento com Halteres",
+                    "ordem": 3,
+                    "equipamento": "Halteres",
+                    "series": 3,
+                    "repeticoes": "Testar 1RM",
+                    "percentual_rm": null,
+                    "tempo_descanso": "3-5min",
+                    "cadencia": "2020",
+                    "metodo": "Piramidal",
+                    "progressao": [],
+                    "observacoes": ""
+                  },
+                  {
+                    "exercicio_id": "EXE00004",
+                    "nome": "Rosca Direta com Barra",
+                    "ordem": 4,
+                    "equipamento": "Barra",
+                    "series": 3,
+                    "repeticoes": "Testar 1RM",
+                    "percentual_rm": null,
+                    "tempo_descanso": "3-5min",
+                    "cadencia": "2020",
+                    "metodo": "Piramidal",
+                    "progressao": [],
+                    "observacoes": ""
+                  }
+                ],
+                "aquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                },
+                "desaquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                }
+              },
+              {
+                "sessao_id": "SES00002",
+                "nome": "Treino B - Força Inferior",
+                "tipo": "Resistência",
+                "duracao_minutos": 60,
+                "nivel_intensidade": "Alta",
+                "dia_semana": "terça",
+                "grupos_musculares": [],
+                "exercicios": [],
+                "aquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                },
+                "desaquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                }
+              },
+              {
+                "sessao_id": "SES00003",
+                "nome": "Treino C - Hipertrofia Superior",
+                "tipo": "Resistência",
+                "duracao_minutos": 60,
+                "nivel_intensidade": "Moderada",
+                "dia_semana": "quinta",
+                "grupos_musculares": [],
+                "exercicios": [],
+                "aquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                },
+                "desaquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                }
+              },
+              {
+                "sessao_id": "SES00004",
+                "nome": "Treino D - Cardio e Mobilidade",
+                "tipo": "Cardio",
+                "duracao_minutos": 30,
+                "nivel_intensidade": "Baixa",
+                "dia_semana": "sexta",
+                "grupos_musculares": [],
+                "exercicios": [],
+                "aquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                },
+                "desaquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metricas": {
+      "calorias_estimadas": 700,
+      "nivel_fadiga_esperado": "Alto",
+      "tempo_recuperacao_horas": 48
+    }
+  },
+  "adaptacoes": {
+    "humor": {
+      "muito_cansado": [],
+      "cansado": [],
+      "neutro": [],
+      "disposto": [],
+      "muito_disposto": []
+    },
+    "tempo_disponivel": {
+      "muito_curto": [
+        {
+          "adaptacao_id": "4071f9f5-b096-4316-a90c-15592c64564d",
+          "sessao_original_id": "SES00001",
+          "duracao_alvo": 20,
+          "estrategia": "Mínimo essencial",
+          "exercicios_priorizados": [
+            "EXE00001",
+            "EXE00002"
+          ],
+          "exercicios_removidos": [
+            "EXE00003",
+            "EXE00004"
+          ],
+          "exercicios_modificados": [
+            {
+              "exercicio_id": "EXE00001",
+              "series_ajuste": 0,
+              "repeticoes_ajuste": "-2",
+              "tempo_descanso_ajuste": -15,
+              "metodo_ajustado": "alta_densidade"
+            },
+            {
+              "exercicio_id": "EXE00002",
+              "series_ajuste": -1,
+              "repeticoes_ajuste": "-2",
+              "tempo_descanso_ajuste": -15,
+              "metodo_ajustado": "alta_densidade"
+            }
+          ],
+          "circuitos": [
+            {
+              "circuito_id": "933e5a43-d9d8-49dd-8515-64eff72ff6d3",
+              "exercicios": [
+                "EXE00001",
+                "EXE00002"
+              ],
+              "repeticoes_circuito": 3,
+              "tempo_descanso_entre_exercicios": 15,
+              "tempo_descanso_entre_circuitos": 45
+            }
+          ]
+        }
+      ],
+      "curto": [
+        {
+          "adaptacao_id": "12aa872c-4653-482d-89f1-371b19fc5fff",
+          "sessao_original_id": "SES00001",
+          "duracao_alvo": 30,
+          "estrategia": "Foco em compostos",
+          "exercicios_priorizados": [
+            "EXE00001",
+            "EXE00002",
+            "EXE00003",
+            "EXE00004"
+          ],
+          "exercicios_removidos": [],
+          "exercicios_modificados": [
+            {
+              "exercicio_id": "EXE00001",
+              "series_ajuste": 0,
+              "repeticoes_ajuste": "-1",
+              "tempo_descanso_ajuste": -15,
+              "metodo_ajustado": ""
+            },
+            {
+              "exercicio_id": "EXE00002",
+              "series_ajuste": 0,
+              "repeticoes_ajuste": "-1",
+              "tempo_descanso_ajuste": -15,
+              "metodo_ajustado": "superset"
+            },
+            {
+              "exercicio_id": "EXE00003",
+              "series_ajuste": -1,
+              "repeticoes_ajuste": "-1",
+              "tempo_descanso_ajuste": -15,
+              "metodo_ajustado": ""
+            },
+            {
+              "exercicio_id": "EXE00004",
+              "series_ajuste": -1,
+              "repeticoes_ajuste": "-1",
+              "tempo_descanso_ajuste": -15,
+              "metodo_ajustado": "superset"
+            }
+          ],
+          "circuitos": [
+            {
+              "circuito_id": "8e083f41-91da-42be-8d90-b01ad20d09c2",
+              "exercicios": [
+                "EXE00001",
+                "EXE00003"
+              ],
+              "repeticoes_circuito": 3,
+              "tempo_descanso_entre_exercicios": 10,
+              "tempo_descanso_entre_circuitos": 60
+            },
+            {
+              "circuito_id": "e73e9a62-da9a-463f-8a4c-c91e48ae1341",
+              "exercicios": [
+                "EXE00002",
+                "EXE00004"
+              ],
+              "repeticoes_circuito": 3,
+              "tempo_descanso_entre_exercicios": 10,
+              "tempo_descanso_entre_circuitos": 60
+            }
+          ]
+        }
+      ],
+      "padrao": [
+        {
+          "adaptacao_id": "feb65956-72c2-4fe3-b973-0c38fb27110e",
+          "sessao_original_id": "SES00001",
+          "duracao_alvo": 60,
+          "estrategia": "Treino completo",
+          "exercicios_priorizados": [],
+          "exercicios_removidos": [],
+          "exercicios_modificados": [
+            {
+              "exercicio_id": "EXE00003",
+              "series_ajuste": 0,
+              "repeticoes_ajuste": "0",
+              "tempo_descanso_ajuste": 0,
+              "metodo_ajustado": "normal"
+            },
+            {
+              "exercicio_id": "EXE00004",
+              "series_ajuste": 0,
+              "repeticoes_ajuste": "0",
+              "tempo_descanso_ajuste": 0,
+              "metodo_ajustado": "normal"
+            }
+          ],
+          "circuitos": []
+        }
+      ],
+      "longo": [
+        {
+          "adaptacao_id": "703eebe1-6d01-4376-991c-0f7442a2d209",
+          "sessao_original_id": "SES00001",
+          "duracao_alvo": 90,
+          "estrategia": "Treino expandido",
+          "exercicios_priorizados": [
+            "EXE00001",
+            "EXE00002",
+            "EXE00003",
+            "EXE00004"
+          ],
+          "exercicios_removidos": [],
+          "exercicios_modificados": [
+            {
+              "exercicio_id": "EXE00001",
+              "series_ajuste": 1,
+              "repeticoes_ajuste": "0",
+              "tempo_descanso_ajuste": 10,
+              "metodo_ajustado": "variacao_avancada"
+            },
+            {
+              "exercicio_id": "EXE00002",
+              "series_ajuste": 1,
+              "repeticoes_ajuste": "0",
+              "tempo_descanso_ajuste": 10,
+              "metodo_ajustado": "variacao_avancada"
+            },
+            {
+              "exercicio_id": "EXE00003",
+              "series_ajuste": 1,
+              "repeticoes_ajuste": "0",
+              "tempo_descanso_ajuste": 10,
+              "metodo_ajustado": "variacao_avancada"
+            },
+            {
+              "exercicio_id": "EXE00004",
+              "series_ajuste": 1,
+              "repeticoes_ajuste": "0",
+              "tempo_descanso_ajuste": 10,
+              "metodo_ajustado": "normal"
+            }
+          ],
+          "circuitos": [],
+          "exercicios_adicionados": [
+            {
+              "exercicio_id": "9f3972d7-c2f4-40aa-bb32-88dfa0de6b0b",
+              "nome": "Exercício complementar de finalização",
+              "ordem": 5,
+              "series": 3,
+              "repeticoes": "12-15",
+              "tempo_descanso": 60,
+              "metodo_ajustado": "normal"
+            }
+          ]
+        }
+      ],
+      "muito_longo": [
+        {
+          "adaptacao_id": "0f25d554-7eb3-4d93-97a0-d20f6b880b14",
+          "sessao_original_id": "SES00001",
+          "duracao_alvo": 120,
+          "estrategia": "Treino expandido com técnicas avançadas",
+          "exercicios_priorizados": [],
+          "exercicios_removidos": [],
+          "exercicios_modificados": [
+            {
+              "exercicio_id": "EXE00001",
+              "series_ajuste": 2,
+              "repeticoes_ajuste": "-2",
+              "tempo_descanso_ajuste": 15,
+              "metodo_ajustado": "piramide"
+            },
+            {
+              "exercicio_id": "EXE00002",
+              "series_ajuste": 2,
+              "repeticoes_ajuste": "-2",
+              "tempo_descanso_ajuste": 15,
+              "metodo_ajustado": "piramide"
+            },
+            {
+              "exercicio_id": "EXE00003",
+              "series_ajuste": 2,
+              "repeticoes_ajuste": "-2",
+              "tempo_descanso_ajuste": 15,
+              "metodo_ajustado": "drop_set"
+            },
+            {
+              "exercicio_id": "EXE00004",
+              "series_ajuste": 2,
+              "repeticoes_ajuste": "-2",
+              "tempo_descanso_ajuste": -10,
+              "metodo_ajustado": "drop_set"
+            }
+          ],
+          "circuitos": [],
+          "exercicios_adicionados": [
+            {
+              "exercicio_id": "d7dbc856-73e9-402f-906b-1548a44fe019",
+              "nome": "Exercício complementar de alta intensidade",
+              "ordem": 5,
+              "series": 4,
+              "repeticoes": "8-10",
+              "tempo_descanso": 90,
+              "metodo_ajustado": "drop_set"
+            },
+            {
+              "exercicio_id": "bfb69b95-6164-4b04-bbfd-b75f4be01cfe",
+              "nome": "Exercício de especialização muscular",
+              "ordem": 6,
+              "series": 3,
+              "repeticoes": "12-15",
+              "tempo_descanso": 60,
+              "metodo_ajustado": "isometrico"
+            },
+            {
+              "exercicio_id": "06ea8120-e9e3-47e9-8eb3-3888504b2256",
+              "nome": "Exercício de finalização (bombeamento)",
+              "ordem": 7,
+              "series": 2,
+              "repeticoes": "20-25",
+              "tempo_descanso": 45,
+              "metodo_ajustado": "queima"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

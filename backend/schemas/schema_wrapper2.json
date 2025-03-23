@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "required": ["treinamento_id", "plano_principal", "adaptacoes"],
+  "properties": {
+    "treinamento_id": {"type": "string"},
+    "plano_principal": {"type": "object"},
+    "adaptacoes": {
+      "type": "object",
+      "properties": {
+        "humor": {"type": "object"},
+        "tempo_disponivel": {"type": "object"}
+      }
+    }
+  }
+}

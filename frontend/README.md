@@ -1,70 +1,118 @@
-# Getting Started with Create React App
+# FORCA - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Este é o frontend da aplicação FORCA, um sistema de treinamento inteligente que utiliza um design com glassmorphism em fundo escuro e elementos com destaque em amarelo neon.
 
-## Available Scripts
+## Autenticação com Supabase
 
-In the project directory, you can run:
+O sistema utiliza o Supabase para autenticação e gerenciamento de usuários. Foram implementadas as seguintes funcionalidades:
+
+- Login (email/senha)
+- Cadastro de novos usuários
+- Recuperação de senha via email
+- Redefinição de senha
+
+### Configuração do Supabase
+
+Para configurar a integração com o Supabase:
+
+1. Copie o arquivo `.env.example` para `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edite o arquivo `.env` e adicione suas credenciais do Supabase:
+   ```
+   REACT_APP_SUPABASE_URL=sua_url_do_supabase
+   REACT_APP_SUPABASE_ANON_KEY=sua_chave_anon_do_supabase
+   ```
+
+3. Certifique-se de que o serviço de autenticação está habilitado no seu projeto Supabase e que o provedor "Email" está ativado.
+
+4. Configure o domínio de redirecionamento para recuperação de senha no Console do Supabase em:
+   - Authentication > URL Configuration > Add a new redirect URL
+   - Adicione: `http://localhost:3000/reset-password`
+
+## Componentes de Autenticação
+
+### Login
+O componente de login permite que usuários existentes façam login no sistema.
+
+### Register
+O componente de cadastro permite que novos usuários criem uma conta.
+
+### ForgotPassword
+O componente de recuperação de senha envia um email com um link para redefinir a senha.
+
+### ResetPassword
+O componente de redefinição de senha permite que o usuário defina uma nova senha após clicar no link enviado por email.
+
+## Rotas Protegidas
+
+Foi implementado um sistema de rotas protegidas que verifica se o usuário está autenticado antes de permitir o acesso a determinadas páginas.
+
+```jsx
+<Route 
+  path="/rota-protegida" 
+  element={
+    <ProtectedRoute>
+      <SeuComponente />
+    </ProtectedRoute>
+  } 
+/>
+```
+
+## Contexto de Autenticação
+
+Um contexto de autenticação (`AuthContext`) foi criado para gerenciar o estado do usuário e fornecer métodos para login, logout, etc.
+
+Para usar o contexto em seus componentes:
+
+```jsx
+import { useAuth } from '../context/AuthContext';
+
+const SeuComponente = () => {
+  const { user, signIn, signOut } = useAuth();
+  
+  // Use os métodos e o estado do usuário aqui
+  
+  return (
+    // ...
+  );
+};
+```
+
+## Estilo Visual
+
+Todos os componentes seguem o estilo visual definido para o projeto:
+
+- Fundo: Gradiente escuro (from-[#0A0A0A] to-[#1A1A1A])
+- Elementos decorativos: Círculos com blur para criar profundidade
+- Container principal: Efeito glassmorphism com backdrop-blur e borda semi-transparente
+- Campos de entrada: Semi-transparentes com bordas leves
+- Botão principal: Cor amarelo neon (#EBFF00) com texto preto
+- Efeitos hover/focus em todos os elementos interativos
+
+## Scripts Disponíveis
+
+No diretório do projeto, você pode executar:
 
 ### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Executa o aplicativo no modo de desenvolvimento.\
+Abra [http://localhost:3000](http://localhost:3000) para visualizá-lo no navegador.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+A página será recarregada quando você fizer alterações.\
+Você também pode ver erros de lint no console.
 
 ### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Inicia o executor de teste no modo de observação interativa.\
+Consulte a seção sobre [execução de testes](https://facebook.github.io/create-react-app/docs/running-tests) para obter mais informações.
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Cria o aplicativo para produção na pasta `build`.\
+Ele empacota corretamente o React no modo de produção e otimiza a compilação para obter o melhor desempenho.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+A compilação é minificada e os nomes dos arquivos incluem os hashes.\
+Seu aplicativo está pronto para ser implantado!

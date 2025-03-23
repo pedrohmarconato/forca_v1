@@ -8,14 +8,11 @@ import time
 import traceback
 from typing import Dict, Any, List, Optional, Tuple
 
-# Adicionar o diretório pai ao path para permitir importações relativas
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 # Importar utilitários e wrappers
-from utils.config import get_supabase_config
-from utils.logger import WrapperLogger
-from wrappers.supabase_client import SupabaseWrapper
-from wrappers.distribuidor_treinos import DistribuidorBD, TabelaMapping
+from backend.utils.config import get_supabase_config
+from backend.utils.logger import WrapperLogger
+from backend.wrappers.supabase_client import SupabaseWrapper
+from backend.wrappers.distribuidor_treinos import DistribuidorBD, TabelaMapping
 
 # Inicializar logger
 logger = WrapperLogger("SupabaseInit")
@@ -289,14 +286,70 @@ class SupabaseInitializer:
         logger.debug(f"Executando SQL: {sql}")
         
         try:
-            resultado = self.supabase.execute_rpc("exec_sql", {"command": sql})
+            # Verificar se o comando é um CREATE TABLE
+            if sql.strip().upper().startswith("CREATE TABLE"):
+                # Extrair nome da tabela entre CREATE TABLE e (
+                import re
+                match = re.search(r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)", sql, re.IGNORECASE)
+                
+                if match:
+                    tabela_nome = match.group(1)
+                    logger.info(f"Detectado comando CREATE TABLE para {tabela_nome}")
+                    
+                    # Extrair definição de colunas
+                    # Este é um parser simplificado, não lida com todos os tipos SQL complexos
+                    colunas_match = re.search(r"\(\s*(.*?)\s*\);", sql, re.DOTALL)
+                    if colunas_match:
+                        colunas_text = colunas_match.group(1)
+                        colunas_defs = [col.strip() for col in colunas_text.split(",")]
+                        
+                        # Remover definições que não são colunas (como PRIMARY KEY constraints)
+                        colunas_filtered = []
+                        for col in colunas_defs:
+                            if col and not col.upper().startswith("PRIMARY KEY") and not col.upper().startswith("FOREIGN KEY"):
+                                col_name = col.split()[0]
+                                colunas_filtered.append(col_name)
+                        
+                        if colunas_filtered:
+                            logger.info(f"Colunas: {', '.join(colunas_filtered[:3])}...")
+                            
+                            # Criamos a tabela usando o Supabase API RLS se possível
+                            try:
+                                # Aqui usaríamos um enfoque diferente para criação de tabelas
+                                # Sem a função RPC exec_sql, podemos ter que fazer um procedimento
+                                # mais complexo com REST API para tabelas
+                                logger.warning("Criação de tabela direta não suportada sem funções SQL personalizadas")
+                                logger.warning("Por favor crie a tabela manualmente no console Supabase")
+                                return False
+                            except Exception as e:
+                                logger.error(f"Erro ao criar tabela {tabela_nome}: {str(e)}")
+                                return False
+                    else:
+                        logger.error("Não foi possível extrair definições de colunas")
+                else:
+                    logger.error("Não foi possível extrair nome da tabela")
             
-            if resultado.get("status") == "success":
-                logger.debug("SQL executado com sucesso")
-                return True
-            else:
-                logger.error(f"Erro ao executar SQL: {resultado.get('message', 'Erro desconhecido')}")
+            # Verificar se o comando é um CREATE INDEX
+            elif sql.strip().upper().startswith("CREATE INDEX"):
+                logger.warning("Criação de índice não suportada sem funções SQL personalizadas")
+                logger.warning("Por favor crie o índice manualmente no console Supabase")
                 return False
+                
+            # Verificar se é uma função ou trigger
+            elif sql.strip().upper().startswith(("CREATE OR REPLACE FUNCTION", "CREATE FUNCTION", "CREATE TRIGGER")):
+                logger.warning("Criação de função/trigger não suportada sem funções SQL personalizadas")
+                logger.warning("Por favor crie a função/trigger manualmente no console Supabase")
+                return False
+                
+            # Outros comandos SQL
+            else:
+                logger.warning("Execução de SQL personalizado não suportada sem função exec_sql")
+                logger.warning("Por favor execute o comando manualmente no console Supabase")
+                return False
+                
+            # Como não podemos executar o SQL diretamente sem a função exec_sql, 
+            # retornamos False para comandos não suportados
+            return False
                 
         except Exception as e:
             logger.error(f"Exceção ao executar SQL: {str(e)}")
@@ -415,39 +468,43 @@ class SupabaseInitializer:
         """
         logger.info("Verificando tabelas existentes")
         
-        sql = """
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public'
-        """
-        
         try:
-            resultado = self.supabase.execute_rpc("exec_sql", {"command": sql})
+            # Simplificado: Assumir que as tabelas precisam ser criadas
+            # Uma vez que o Supabase não permite facilmente verificar existência 
+            # de tabelas sem funções SQL personalizadas
+            tabelas_necessarias = set()
+            for mapeamento in self.mapeamento_tabelas.values():
+                tabelas_necessarias.add(mapeamento.tabela)
             
-            if resultado.get("status") == "success":
-                dados = resultado.get("data", [])
-                tabelas_existentes = [row.get("table_name") for row in dados]
+            # Tentativa de verificar a existência da tabela principal usando um SELECT
+            tabelas_existentes = []
+            tabela_teste = "Fato_Treinamento"  # Tabela principal para teste
+            
+            try:
+                # Tentar selecionar com LIMIT 0 apenas para verificar se a tabela existe
+                teste_sql = f"SELECT * FROM {tabela_teste} LIMIT 0;"
+                resultado_teste = self.supabase.client.table(tabela_teste).select("*").limit(0).execute()
                 
-                # Comparar com as tabelas que precisamos criar
-                tabelas_necessarias = set()
-                for mapeamento in self.mapeamento_tabelas.values():
-                    tabelas_necessarias.add(mapeamento.tabela)
+                # Se não lançou erro, a tabela existe
+                if resultado_teste and 'data' in resultado_teste:
+                    logger.info(f"Tabela {tabela_teste} existe")
+                    tabelas_existentes.append(tabela_teste)
                 
-                tabelas_faltantes = tabelas_necessarias - set(tabelas_existentes)
-                
-                return {
-                    "status": "success",
-                    "tabelas_existentes": sorted(tabelas_existentes),
-                    "tabelas_necessarias": sorted(tabelas_necessarias),
-                    "tabelas_faltantes": sorted(tabelas_faltantes),
-                    "completo": len(tabelas_faltantes) == 0
-                }
-            else:
-                logger.error(f"Erro ao verificar tabelas: {resultado.get('message')}")
-                return {
-                    "status": "error",
-                    "mensagem": resultado.get("message", "Erro desconhecido"),
-                }
+            except Exception as e:
+                logger.info(f"Tabela {tabela_teste} não existe: {str(e)}")
+                # Tabela não existe, continua com lista vazia
+            
+            # Determinar tabelas faltantes
+            tabelas_faltantes = sorted(tabelas_necessarias - set(tabelas_existentes))
+            completo = len(tabelas_faltantes) == 0
+            
+            return {
+                "status": "success",
+                "tabelas_existentes": tabelas_existentes,
+                "tabelas_necessarias": sorted(tabelas_necessarias),
+                "tabelas_faltantes": tabelas_faltantes,
+                "completo": completo
+            }
                 
         except Exception as e:
             logger.error(f"Exceção ao verificar tabelas: {str(e)}")

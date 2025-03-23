@@ -1,0 +1,213 @@
+{
+  "treinamento_id": "ab0575a8-655b-4513-aeec-57fd15ae9574",
+  "versao": "1.0",
+  "data_criacao": "2025-03-22T23:53:07.982712",
+  "usuario": {
+    "id": "user123",
+    "nome": "João Silva",
+    "nivel": "intermediário",
+    "objetivos": [
+      {
+        "objetivo_id": "OBJ00001",
+        "nome": "Hipertrofia",
+        "prioridade": 1
+      },
+      {
+        "objetivo_id": "OBJ00002",
+        "nome": "Força",
+        "prioridade": 2
+      }
+    ],
+    "restricoes": [
+      {
+        "restricao_id": "RES00001",
+        "nome": "Dor no joelho",
+        "gravidade": "moderada"
+      }
+    ]
+  },
+  "plano_principal": {
+    "nome": "Plano de Treinamento de 12 Semanas",
+    "descricao": "Plano para ganho de hipertrofia e força com foco em membros superiores",
+    "periodizacao": {
+      "tipo": "Linear",
+      "descricao": "Periodização Linear com aumento gradual de intensidade e volume"
+    },
+    "duracao_semanas": 12,
+    "frequencia_semanal": 4,
+    "ciclos": [
+      {
+        "ciclo_id": "CIC00001",
+        "nome": "Hipertrofia e Força",
+        "ordem": 1,
+        "duracao_semanas": 12,
+        "objetivo": "Ganho de massa muscular e força com foco em membros superiores",
+        "microciclos": [
+          {
+            "semana": 1,
+            "volume": "Moderado",
+            "intensidade": "Baixa",
+            "foco": "Adaptação e Técnica",
+            "sessoes": [
+              {
+                "sessao_id": "SES00001",
+                "nome": "Treino A - Teste de Força",
+                "tipo": "Resistência",
+                "duracao_minutos": 60,
+                "nivel_intensidade": null,
+                "dia_semana": "segunda",
+                "grupos_musculares": [
+                  {
+                    "grupo_id": "GRP00001",
+                    "nome": "Peito",
+                    "prioridade": 2
+                  },
+                  {
+                    "grupo_id": "GRP00002",
+                    "nome": "Costas",
+                    "prioridade": 1
+                  },
+                  {
+                    "grupo_id": "GRP00003",
+                    "nome": "Ombros",
+                    "prioridade": 1
+                  },
+                  {
+                    "grupo_id": "GRP00004",
+                    "nome": "Bíceps",
+                    "prioridade": 2
+                  }
+                ],
+                "exercicios": [
+                  {
+                    "exercicio_id": "EXE00001",
+                    "nome": "Supino Reto com Barra",
+                    "ordem": 1,
+                    "equipamento": "Barra",
+                    "series": 3,
+                    "repeticoes": "Testar 1RM",
+                    "percentual_rm": null,
+                    "tempo_descanso": "3-5min",
+                    "cadencia": "2020",
+                    "metodo": "Piramidal",
+                    "progressao": [],
+                    "observacoes": "Fazer aquecimento com cargas leves"
+                  },
+                  {
+                    "exercicio_id": "EXE00002",
+                    "nome": "Barra Fixa",
+                    "ordem": 2,
+                    "equipamento": "Barra fixa",
+                    "series": 3,
+                    "repeticoes": "Testar 1RM",
+                    "percentual_rm": null,
+                    "tempo_descanso": "3-5min",
+                    "cadencia": "",
+                    "metodo": "Piramidal",
+                    "progressao": [],
+                    "observacoes": "Fazer variações se necessário"
+                  },
+                  {
+                    "exercicio_id": "EXE00003",
+                    "nome": "Desenvolvimento com Halteres",
+                    "ordem": 3,
+                    "equipamento": "Halteres",
+                    "series": 3,
+                    "repeticoes": "Testar 1RM",
+                    "percentual_rm": null,
+                    "tempo_descanso": "3-5min",
+                    "cadencia": "2020",
+                    "metodo": "Piramidal",
+                    "progressao": [],
+                    "observacoes": ""
+                  },
+                  {
+                    "exercicio_id": "EXE00004",
+                    "nome": "Rosca Direta com Barra",
+                    "ordem": 4,
+                    "equipamento": "Barra",
+                    "series": 3,
+                    "repeticoes": "Testar 1RM",
+                    "percentual_rm": null,
+                    "tempo_descanso": "3-5min",
+                    "cadencia": "2020",
+                    "metodo": "Piramidal",
+                    "progressao": [],
+                    "observacoes": ""
+                  }
+                ],
+                "aquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                },
+                "desaquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                }
+              },
+              {
+                "sessao_id": "SES00002",
+                "nome": "Treino B - Força Inferior",
+                "tipo": "Resistência",
+                "duracao_minutos": 60,
+                "nivel_intensidade": "Alta",
+                "dia_semana": "terça",
+                "grupos_musculares": [],
+                "exercicios": [],
+                "aquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                },
+                "desaquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                }
+              },
+              {
+                "sessao_id": "SES00003",
+                "nome": "Treino C - Hipertrofia Superior",
+                "tipo": "Resistência",
+                "duracao_minutos": 60,
+                "nivel_intensidade": "Moderada",
+                "dia_semana": "quinta",
+                "grupos_musculares": [],
+                "exercicios": [],
+                "aquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                },
+                "desaquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                }
+              },
+              {
+                "sessao_id": "SES00004",
+                "nome": "Treino D - Cardio e Mobilidade",
+                "tipo": "Cardio",
+                "duracao_minutos": 30,
+                "nivel_intensidade": "Baixa",
+                "dia_semana": "sexta",
+                "grupos_musculares": [],
+                "exercicios": [],
+                "aquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                },
+                "desaquecimento": {
+                  "duracao_minutos": 5,
+                  "exercicios": []
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metricas": {
+      "calorias_estimadas": 700,
+      "nivel_fadiga_esperado": "Alto",
+      "tempo_recuperacao_horas": 48
+    }
+  }
+}

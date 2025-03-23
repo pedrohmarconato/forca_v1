@@ -1,116 +1,223 @@
-# Integration Script #
+#!/usr/bin/env python3
+# Sistema de Orquestração dos Componentes FORCA #
 
-import json
 import os
-from wrapper1 import TreinadorEspecialista 
-from wrapper2 import SistemaAdaptacao
-from wrapper3 import DistribuidorBD
+import sys
+import argparse
+import json
+import traceback
+from typing import Dict, Any, Optional, List, Tuple
 
-def run_training_pipeline(api_key, user_data, db_config=None):
+# Importar wrappers do sistema
+from backend.wrappers.treinador_especialista import TreinadorEspecialista
+from backend.wrappers.sistema_adaptacao_treino import SistemaAdaptacao
+from backend.wrappers.distribuidor_treinos import DistribuidorBD
+
+# Importar utilitários e configurações
+from backend.utils.logger import WrapperLogger
+from backend.utils.config import get_claude_config, get_supabase_config, get_db_config
+
+# Configurar logger
+logger = WrapperLogger("IntegrationSystem")
+
+def initialize_system(init_db: bool = True, force_reset: bool = False) -> Dict[str, Any]:
     """
-    Execute the complete training pipeline using all three wrappers.
+    Inicializa todos os componentes do sistema FORCA.
     
     Args:
-        api_key (str): Claude API key
-        user_data (dict): User data for generating the training plan
-        db_config (dict, optional): Database configuration
+        init_db (bool): Se True, inicializa as tabelas do banco de dados
+        force_reset (bool): Se True, força reset completo das tabelas (usado apenas se init_db=True)
         
     Returns:
-        dict: Result of the pipeline execution
+        Dict: Resultado da inicialização dos componentes
     """
-    # Initialize all wrappers
-    treinador = TreinadorEspecialista(api_key)
-    adaptador = SistemaAdaptacao()
-    distribuidor = DistribuidorBD(db_config)
+    logger.info("Iniciando inicialização do sistema FORCA")
+    resultado = {
+        "status": "success",
+        "componentes": {},
+        "erros": []
+    }
     
     try:
-        # Step 1: Generate training plan using Wrapper 1 (Treinador Especialista)
-        print("Step 1: Generating main training plan...")
-        plano_principal = treinador.criar_plano_treinamento(user_data)
+        # Inicializar TreinadorEspecialista
+        logger.info("Inicializando TreinadorEspecialista...")
+        try:
+            claude_config = get_claude_config()
+            treinador = TreinadorEspecialista(claude_config)
+            resultado["componentes"]["treinador_especialista"] = {
+                "status": "success",
+                "message": "TreinadorEspecialista inicializado com sucesso"
+            }
+            logger.info("TreinadorEspecialista inicializado com sucesso")
+        except Exception as e:
+            error_msg = f"Erro ao inicializar TreinadorEspecialista: {str(e)}"
+            logger.error(error_msg)
+            logger.error(traceback.format_exc())
+            resultado["componentes"]["treinador_especialista"] = {
+                "status": "error",
+                "message": error_msg
+            }
+            resultado["erros"].append(error_msg)
         
-        # Optional: Save main plan to file for debugging
-        with open("plano_principal_output.json", "w", encoding="utf-8") as f:
-            json.dump(plano_principal, f, indent=2, ensure_ascii=False)
+        # Inicializar SistemaAdaptacao
+        logger.info("Inicializando SistemaAdaptacao...")
+        try:
+            sistema_adaptacao = SistemaAdaptacao()
+            resultado["componentes"]["sistema_adaptacao"] = {
+                "status": "success",
+                "message": "SistemaAdaptacao inicializado com sucesso"
+            }
+            logger.info("SistemaAdaptacao inicializado com sucesso")
+        except Exception as e:
+            error_msg = f"Erro ao inicializar SistemaAdaptacao: {str(e)}"
+            logger.error(error_msg)
+            logger.error(traceback.format_exc())
+            resultado["componentes"]["sistema_adaptacao"] = {
+                "status": "error",
+                "message": error_msg
+            }
+            resultado["erros"].append(error_msg)
         
-        # Step 2: Create adaptations using Wrapper 2 (Sistema de Adaptação)
-        print("Step 2: Creating training adaptations...")
-        plano_adaptado = adaptador.processar_plano(plano_principal)
+        # Inicializar DistribuidorBD
+        logger.info("Inicializando DistribuidorBD...")
+        try:
+            db_config = get_db_config()
+            # Inicialmente não verificar tabelas, faremos isso manualmente se init_db=True
+            distribuidor = DistribuidorBD(config_db=db_config, check_tables=False)
+            resultado["componentes"]["distribuidor_bd"] = {
+                "status": "success",
+                "message": "DistribuidorBD inicializado com sucesso"
+            }
+            logger.info("DistribuidorBD inicializado com sucesso")
+            
+            # Inicializar tabelas do banco de dados se solicitado
+            if init_db:
+                logger.info(f"Inicializando tabelas do banco de dados (force_reset={force_reset})...")
+                try:
+                    db_resultado = distribuidor.inicializar_tabelas(force_reset=force_reset)
+                    
+                    if db_resultado.get("sucesso"):
+                        resultado["componentes"]["banco_dados"] = {
+                            "status": "success",
+                            "message": db_resultado.get("mensagem", "Tabelas inicializadas com sucesso"),
+                            "detalhes": {
+                                "tabelas_criadas": db_resultado.get("tabelas_criadas", 0),
+                                "indices_criados": db_resultado.get("indices_criados", 0),
+                                "funcoes_criadas": db_resultado.get("funcoes_criadas", 0),
+                                "triggers_criados": db_resultado.get("triggers_criados", 0)
+                            }
+                        }
+                        logger.info(f"Banco de dados inicializado com sucesso: {db_resultado.get('mensagem', '')}")
+                    else:
+                        error_msg = f"Erro ao inicializar tabelas: {db_resultado.get('mensagem', 'Erro desconhecido')}"
+                        logger.error(error_msg)
+                        resultado["componentes"]["banco_dados"] = {
+                            "status": "error",
+                            "message": error_msg,
+                            "detalhes": db_resultado
+                        }
+                        resultado["erros"].append(error_msg)
+                except Exception as e:
+                    error_msg = f"Exceção ao inicializar tabelas: {str(e)}"
+                    logger.error(error_msg)
+                    logger.error(traceback.format_exc())
+                    resultado["componentes"]["banco_dados"] = {
+                        "status": "error",
+                        "message": error_msg
+                    }
+                    resultado["erros"].append(error_msg)
+        except Exception as e:
+            error_msg = f"Erro ao inicializar DistribuidorBD: {str(e)}"
+            logger.error(error_msg)
+            logger.error(traceback.format_exc())
+            resultado["componentes"]["distribuidor_bd"] = {
+                "status": "error",
+                "message": error_msg
+            }
+            resultado["erros"].append(error_msg)
         
-        # Optional: Save adapted plan to file for debugging
-        with open("plano_adaptado_output.json", "w", encoding="utf-8") as f:
-            json.dump(plano_adaptado, f, indent=2, ensure_ascii=False)
+        # Determinar status geral
+        if resultado["erros"]:
+            resultado["status"] = "partial_success" if len(resultado["erros"]) < 3 else "error"
         
-        # Step 3: Distribute to database using Wrapper 3 (Distribuidor BD)
-        print("Step 3: Mapping data to database tables...")
+        logger.info(f"Inicialização do sistema concluída com status: {resultado['status']}")
         
-        # Connect to database if configuration is provided
-        if db_config:
-            distribuidor.conectar_bd(db_config)
-        
-        # Process the adapted plan
-        resultado = distribuidor.processar_plano(plano_adaptado)
-        
-        # Disconnect from database if connected
-        if db_config:
-            distribuidor.desconectar_bd()
-        
-        print("Pipeline completed successfully!")
-        return {
-            "status": "success",
-            "steps_completed": 3,
-            "resultado_db": resultado
-        }
+        return resultado
     
     except Exception as e:
-        print(f"Error in pipeline: {str(e)}")
+        logger.error(f"Erro fatal durante inicialização do sistema: {str(e)}")
+        logger.error(traceback.format_exc())
+        
         return {
-            "status": "error",
-            "message": str(e)
+            "status": "fatal_error",
+            "message": f"Erro fatal durante inicialização: {str(e)}",
+            "componentes": resultado.get("componentes", {}),
+            "erros": resultado.get("erros", []) + [f"Erro fatal: {str(e)}"]
         }
 
-# Example usage
+def main():
+    """Função principal para execução via linha de comando."""
+    parser = argparse.ArgumentParser(description='Sistema de Integração FORCA')
+    
+    # Opções de inicialização
+    parser.add_argument('--init', action='store_true', help='Inicializar o sistema')
+    parser.add_argument('--no-db-init', action='store_true', help='Não inicializar o banco de dados')
+    parser.add_argument('--reset-db', action='store_true', help='Resetar banco de dados (remover e recriar tabelas)')
+    
+    # Opções de saída
+    parser.add_argument('--output', type=str, help='Arquivo para salvar resultado da inicialização em formato JSON')
+    parser.add_argument('--verbose', action='store_true', help='Exibir informações detalhadas durante a execução')
+    
+    args = parser.parse_args()
+    
+    # Se nenhum argumento for fornecido, mostrar ajuda
+    if len(sys.argv) == 1:
+        parser.print_help()
+        return 0
+    
+    # Configurar nível de log com base em verbose
+    if args.verbose:
+        logger.set_level("DEBUG")
+    
+    # Inicializar sistema se solicitado
+    if args.init:
+        print("Inicializando sistema FORCA...")
+        
+        # Determinar opções de inicialização
+        init_db = not args.no_db_init
+        force_reset = args.reset_db
+        
+        # Se reset_db=True, garantir que init_db também seja True
+        if force_reset:
+            init_db = True
+        
+        # Inicializar sistema
+        resultado = initialize_system(init_db=init_db, force_reset=force_reset)
+        
+        # Exibir resultado resumido
+        status = resultado["status"]
+        erros = len(resultado["erros"])
+        print(f"\nStatus da inicialização: {status.upper()}")
+        print(f"Componentes inicializados: {len(resultado['componentes'])}")
+        if erros > 0:
+            print(f"Erros encontrados: {erros}")
+            for i, erro in enumerate(resultado["erros"][:3], 1):
+                print(f"  Erro {i}: {erro[:100]}...")
+            if erros > 3:
+                print(f"  ... e mais {erros - 3} erro(s)")
+        
+        # Salvar resultado em arquivo se solicitado
+        if args.output:
+            try:
+                with open(args.output, 'w', encoding='utf-8') as f:
+                    json.dump(resultado, f, indent=2, ensure_ascii=False)
+                print(f"\nResultado salvo em: {args.output}")
+            except Exception as e:
+                print(f"\nErro ao salvar resultado: {str(e)}")
+        
+        return 0 if status == "success" else 1
+    
+    return 0
+
 if __name__ == "__main__":
-    # Claude API key (get from environment variable for security)
-    api_key = os.environ.get("CLAUDE_API_KEY", "your_api_key_here")
-    
-    # Example user data
-    user_data = {
-        "id": "user123",
-        "nome": "João Silva",
-        "idade": 30,
-        "data_nascimento": "1993-05-15",
-        "peso": 75,
-        "altura": 175,
-        "genero": "masculino",
-        "nivel": "intermediário",
-        "historico_treino": "3 anos de musculação",
-        "tempo_treino": 60,  # tempo disponível por sessão em minutos
-        "objetivos": [
-            {"nome": "Hipertrofia", "prioridade": 1},
-            {"nome": "Força", "prioridade": 2}
-        ],
-        "restricoes": [
-            {"nome": "Dor no joelho", "gravidade": "moderada"}
-        ],
-        "lesoes": [
-            {"regiao": "joelho", "gravidade": "moderada", "observacoes": "Menisco"}
-        ],
-        "disponibilidade_semanal": 4,
-        "dias_disponiveis": ["segunda", "terça", "quinta", "sexta"],
-        "cardio": "sim",
-        "alongamento": "sim",
-        "conversa_chat": "Gostaria de focar mais em membros superiores"
-    }
-    
-    # Example database configuration
-    db_config = {
-        "host": "localhost",
-        "porta": 5432,
-        "usuario": "app_user",
-        "senha": "app_password",
-        "database": "training_app_db"
-    }
-    
-    # Run the pipeline
-    result = run_training_pipeline(api_key, user_data, db_config)
-    print(json.dumps(result, indent=2))
+    sys.exit(main())

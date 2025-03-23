@@ -1,0 +1,147 @@
+{
+  "status": "success",
+  "steps_completed": 3,
+  "resultado_db": {
+    "status": "partial_success",
+    "mensagem": "Executados 0 comandos com sucesso, 16 falhas",
+    "comandos_executados": 0,
+    "comandos_falha": 16,
+    "tempo_execucao": 43.591099977493286,
+    "estatisticas": {
+      "Fato_Treinamento": {
+        "total": 1,
+        "sucesso": 0,
+        "falha": 1
+      },
+      "Fato_CicloTreinamento": {
+        "total": 1,
+        "sucesso": 0,
+        "falha": 1
+      },
+      "Fato_MicrocicloSemanal": {
+        "total": 1,
+        "sucesso": 0,
+        "falha": 1
+      },
+      "Fato_SessaoTreinamento": {
+        "total": 4,
+        "sucesso": 0,
+        "falha": 4
+      },
+      "Fato_ExercicioSessao": {
+        "total": 4,
+        "sucesso": 0,
+        "falha": 4
+      },
+      "Fato_AdaptacaoTreinamento": {
+        "total": 5,
+        "sucesso": 0,
+        "falha": 5
+      }
+    },
+    "resultados": [
+      {
+        "tabela": "Fato_Treinamento",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_CicloTreinamento",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_MicrocicloSemanal",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_SessaoTreinamento",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_ExercicioSessao",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_ExercicioSessao",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_ExercicioSessao",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_ExercicioSessao",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_SessaoTreinamento",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_SessaoTreinamento",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_SessaoTreinamento",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_AdaptacaoTreinamento",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_AdaptacaoTreinamento",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_AdaptacaoTreinamento",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_AdaptacaoTreinamento",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      },
+      {
+        "tabela": "Fato_AdaptacaoTreinamento",
+        "operacao": "INSERT",
+        "resultado": "error",
+        "id": null
+      }
+    ]
+  },
+  "tempo_execucao": {
+    "total": 115.47761464118958,
+    "etapa1": 71.13320231437683,
+    "etapa2": 0.015336275100708008,
+    "etapa3": 43.63459610939026
+  }
+}

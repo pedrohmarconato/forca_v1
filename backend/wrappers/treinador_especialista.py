@@ -11,8 +11,8 @@ import traceback
 import logging
 
 # Importar o WrapperLogger e PathResolver
-from ..utils.logger import WrapperLogger
-from ..utils.path_resolver import (
+from backend.utils.logger import WrapperLogger
+from backend.utils.path_resolver import (
     get_prompt_path, get_schema_path, get_template_path,
     load_file_with_fallback
 )

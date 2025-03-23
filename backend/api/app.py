@@ -8,15 +8,53 @@ import os
 import time
 import traceback
 import datetime
+import sys
+from dotenv import load_dotenv
+
+# Adicionar diretório raiz ao path do Python
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from typing import Dict, Any, Optional
 
-# Importar o módulo de logging
-from ..utils.logger import WrapperLogger
+# Carregar variáveis de ambiente do arquivo .env
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
 
-# Importações dos wrappers
-from ..wrappers.treinador_especialista import TreinadorEspecialista
-from ..wrappers.sistema_adaptacao_treino import SistemaAdaptacao
-from ..wrappers.distribuidor_treinos import DistribuidorBD
+# Substituir as importações relativas por:
+from backend.utils.logger import WrapperLogger
+from backend.wrappers.treinador_especialista import TreinadorEspecialista
+from backend.wrappers.sistema_adaptacao_treino import SistemaAdaptacao
+from backend.wrappers.distribuidor_treinos import DistribuidorBD
+from backend.integration_script import initialize_system
+
+# Configurar logger para inicialização
+api_logger = WrapperLogger("API")
+api_logger.info("Inicializando API FORCA_V1")
+
+# Inicializar o sistema durante o carregamento da API
+api_logger.info("Inicializando componentes do sistema...")
+try:
+    # Inicializar o sistema sem criar/resetar o banco de dados para evitar erros
+    # Uma vez que a função Supabase exec_sql não está disponível
+    api_logger.info("Inicializando sistema sem tentar criar tabelas de banco de dados")
+    init_result = initialize_system(init_db=False, force_reset=False)
+    
+    if init_result["status"] == "success":
+        api_logger.info("Sistema inicializado com sucesso!")
+    elif init_result["status"] == "partial_success":
+        api_logger.warning("Sistema inicializado parcialmente - alguns componentes podem não estar disponíveis")
+        if init_result.get("erros"):
+            api_logger.warning(f"Erros encontrados ({len(init_result['erros'])}): {init_result['erros'][0]}")
+    else:
+        api_logger.error(f"Falha ao inicializar o sistema: {init_result.get('status')}")
+        if init_result.get("erros"):
+            for erro in init_result["erros"][:3]:  # Mostrar até 3 erros
+                api_logger.error(f"Erro: {erro}")
+                
+    api_logger.info("Tabelas de banco de dados não foram inicializadas automaticamente")
+    api_logger.info("Crie manualmente as tabelas necessárias no console do Supabase")
+except Exception as e:
+    api_logger.error(f"Exceção ao inicializar o sistema: {str(e)}")
+    api_logger.error(traceback.format_exc())
+    api_logger.warning("Continuando inicialização da API mesmo com falha na inicialização do sistema")
 
 # Inicialização da aplicação Flask
 app = Flask(__name__)
@@ -239,10 +277,10 @@ if __name__ == "__main__":
         logger.info("="*50)
         app.run(debug=True, host='0.0.0.0', port=5000)
     else:
-        # Claude API key (get from environment variable for security)
-        api_key = os.environ.get("CLAUDE_API_KEY", "your_api_key_here")
-        if api_key == "your_api_key_here":
-            logger.warning("Nenhuma API_KEY encontrada, usando valor padrão (não funcionará)")
+        # Claude API key (get from environment variable - already loaded from .env)
+        api_key = os.getenv("CLAUDE_API_KEY")
+        if not api_key:
+            logger.warning("Nenhuma API_KEY encontrada no arquivo .env")
         
         logger.info("Preparando dados do usuário para exemplo")
         # Example user data

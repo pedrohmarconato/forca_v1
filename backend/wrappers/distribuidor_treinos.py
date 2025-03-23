@@ -27,22 +27,21 @@ class TabelaMapping:
 
 
 class DistribuidorBD:
-    def __init__(self, config_db: Optional[Dict[str, Any]] = None, modo_simulacao: bool = False):
+    def __init__(self, config_db: Optional[Dict[str, Any]] = None, modo_simulacao: bool = False, check_tables: bool = True):
         """
         Inicializa o Distribuidor de Treinos para o BD.
         
         Args:
             config_db (Dict, optional): Configuração de conexão com o banco de dados
             modo_simulacao (bool): Se True, opera em modo de simulação sem conexão real
+            check_tables (bool): Se True, verifica se as tabelas necessárias existem no banco de dados
         """
         # Configurar logger
         self.logger = WrapperLogger("Wrapper3_Distribuidor")
         self.logger.info("Inicializando Distribuidor BD")
         
-        # Flag para controlar o modo de simulação
+        # Flag para controlar o modo de simulação - por padrão usa o modo normal
         self.modo_simulacao = modo_simulacao
-        if self.modo_simulacao:
-            self.logger.info("Inicializando em MODO SIMULAÇÃO (sem conexão real com banco)")
         
         # Obter configuração de BD
         self.config_db = config_db or get_db_config()
@@ -94,6 +93,24 @@ class DistribuidorBD:
         
         # Níveis de tempo disponível atualizados para 5 níveis
         self.tempos_disponiveis = ["muito_curto", "curto", "padrao", "longo", "muito_longo"]
+        
+        # Verificar e inicializar tabelas se necessário
+        if check_tables and not self.modo_simulacao and self.conexao_db and self.conexao_db.get("status") == "connected":
+            try:
+                self.logger.info("Verificando tabelas do banco de dados...")
+                resultado = self.inicializar_tabelas(force_reset=False)
+                
+                if resultado.get("sucesso"):
+                    self.logger.info(resultado.get("mensagem", "Verificação de tabelas concluída"))
+                    if resultado.get("acao_realizada") == "inicializacao":
+                        self.logger.info(f"Tabelas criadas: {resultado.get('tabelas_criadas', 0)}")
+                        self.logger.info(f"Índices criados: {resultado.get('indices_criados', 0)}")
+                else:
+                    self.logger.warning(f"Verificação de tabelas falhou: {resultado.get('mensagem', 'Erro desconhecido')}")
+                    self.logger.warning("Continuando inicialização mesmo assim")
+            except Exception as e:
+                self.logger.error(f"Erro durante verificação de tabelas: {str(e)}")
+                self.logger.warning("Continuando inicialização mesmo com erro na verificação de tabelas")
         
         self.logger.info("Distribuidor BD inicializado com sucesso")
     
@@ -914,6 +931,43 @@ class DistribuidorBD:
             "tabelas": {}
         }
         
+        # Verificar se as tabelas no Supabase existem
+        self.logger.info("Verificando se as tabelas necessárias existem no Supabase")
+        tabelas_existem = False
+        
+        # Tento fazer uma verificação simples de uma tabela principal
+        try:
+            # Testar tabela principal como referência
+            tabela_teste = "Fato_Treinamento"
+            resultado_teste = self.supabase_client.client.table(tabela_teste).select("*").limit(0).execute()
+            
+            if resultado_teste and isinstance(resultado_teste.data, list):
+                self.logger.info(f"Tabela {tabela_teste} existe no Supabase, prosseguindo com execução")
+                tabelas_existem = True
+            else:
+                self.logger.warning(f"Tabela {tabela_teste} não existe ou resultado inesperado")
+        except Exception as e:
+            self.logger.error(f"Erro ao verificar tabela {tabela_teste}: {str(e)}")
+            self.logger.warning("As tabelas necessárias podem não existir no Supabase")
+        
+        if not tabelas_existem:
+            self.logger.warning("As tabelas necessárias não foram encontradas no Supabase")
+            self.logger.warning("Por favor, crie as tabelas manualmente no console do Supabase")
+            
+            # Ativar modo de simulação como fallback
+            self.modo_simulacao = True
+            
+            # Incrementar métricas
+            self.metricas["operacoes_totais"] += 1
+            self.metricas["operacoes_falha"] += 1
+            self.metricas["ultima_operacao"] = "falha_tabelas"
+            
+            return {
+                "status": "simulated",
+                "mensagem": "Comandos gerados para simulação pois tabelas não existem",
+                "comandos": comandos
+            }
+        
         # Verificar se temos conexão com o banco
         if not self._verificar_conexao():
             self.logger.warning("Não foi possível estabelecer conexão com o banco de dados")
@@ -1194,4 +1248,103 @@ class DistribuidorBD:
                 "timestamp": datetime.datetime.now().isoformat()
             }
             return True  # Retorna True mesmo assim para permitir a simulação
+            
+    @WrapperLogger.log_function()
+    def inicializar_tabelas(self, force_reset: bool = False) -> Dict[str, Any]:
+        """
+        Inicializa as tabelas necessárias no Supabase, com base no mapeamento de tabelas.
+        
+        Args:
+            force_reset (bool): Se True, remove e recria todas as tabelas. 
+                               Se False (padrão), cria apenas tabelas faltantes.
+        
+        Returns:
+            Dict: Resultado da operação com informações sobre tabelas criadas/atualizadas
+        """
+        self.logger.info(f"Inicializando tabelas no Supabase (force_reset={force_reset})")
+        
+        try:
+            # Importar o SupabaseInitializer
+            from backend.database.supabase_init import SupabaseInitializer
+            
+            # Obter configuração Supabase atual
+            supabase_config = get_supabase_config()
+            
+            # Inicializar o SupabaseInitializer
+            self.logger.info("Criando instância do SupabaseInitializer")
+            initializer = SupabaseInitializer(config=supabase_config, force_reset=force_reset)
+            
+            # Verificar tabelas existentes
+            self.logger.info("Verificando tabelas existentes")
+            verificacao = initializer.verificar_tabelas()
+            
+            if verificacao.get("status") != "success":
+                self.logger.error(f"Erro ao verificar tabelas: {verificacao.get('mensagem', 'Erro desconhecido')}")
+                return {
+                    "sucesso": False,
+                    "mensagem": f"Erro ao verificar tabelas: {verificacao.get('mensagem', 'Erro desconhecido')}",
+                    "detalhes": verificacao
+                }
+            
+            # Verificar se todas as tabelas já existem e se não há force_reset
+            if verificacao.get("completo", False) and not force_reset:
+                self.logger.info("Todas as tabelas necessárias já existem, nenhuma ação necessária")
+                return {
+                    "sucesso": True,
+                    "mensagem": "Todas as tabelas necessárias já existem",
+                    "tabelas_existentes": verificacao.get("tabelas_existentes", []),
+                    "acoes_realizadas": "nenhuma"
+                }
+            
+            # Inicializar ou resetar tabelas
+            if force_reset:
+                self.logger.warning("Realizando reset completo das tabelas")
+                sucesso, resultado = initializer.resetar_database()
+                acao = "reset"
+            else:
+                self.logger.info("Inicializando tabelas faltantes")
+                sucesso, resultado = initializer.inicializar_database()
+                acao = "inicializacao"
+            
+            # Logar resultados
+            if sucesso:
+                self.logger.info(f"{acao.capitalize()} das tabelas concluída com sucesso")
+                self.logger.info(f"Tabelas criadas: {resultado['tabelas_criadas']}")
+                self.logger.info(f"Índices criados: {resultado['indices_criados']}")
+                self.logger.info(f"Funções criadas: {resultado['funcoes_criadas']}")
+                self.logger.info(f"Triggers criados: {resultado['triggers_criados']}")
+            else:
+                self.logger.error(f"{acao.capitalize()} das tabelas concluída com erros")
+                self.logger.error(f"Número de erros: {len(resultado.get('erros', []))}")
+                for erro in resultado.get('erros', [])[:3]:
+                    self.logger.error(f"Erro: {erro}")
+            
+            # Retornar resultado
+            return {
+                "sucesso": sucesso,
+                "mensagem": f"{acao.capitalize()} das tabelas concluída" + (" com sucesso" if sucesso else " com erros"),
+                "acao_realizada": acao,
+                "tabelas_criadas": resultado.get("tabelas_criadas", 0),
+                "indices_criados": resultado.get("indices_criados", 0),
+                "funcoes_criadas": resultado.get("funcoes_criadas", 0),
+                "triggers_criados": resultado.get("triggers_criados", 0),
+                "erros": resultado.get("erros", []),
+                "detalhes": resultado.get("detalhes", {})
+            }
+            
+        except ImportError as e:
+            self.logger.error(f"Erro ao importar SupabaseInitializer: {str(e)}")
+            return {
+                "sucesso": False,
+                "mensagem": f"Erro ao importar SupabaseInitializer: {str(e)}",
+                "detalhes": {"tipo_erro": "ImportError"}
+            }
+        except Exception as e:
+            self.logger.error(f"Erro ao inicializar tabelas: {str(e)}")
+            self.logger.error(traceback.format_exc())
+            return {
+                "sucesso": False,
+                "mensagem": f"Erro ao inicializar tabelas: {str(e)}",
+                "detalhes": {"tipo_erro": "Exception", "traceback": traceback.format_exc()}
+            }
         
