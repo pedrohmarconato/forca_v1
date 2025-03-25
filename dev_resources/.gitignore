@@ -1,0 +1,5 @@
+# Ignorar todo o conteúdo deste diretório no controle de versão
+*
+# Não ignorar este arquivo .gitignore e o README.md
+!.gitignore
+!README.md

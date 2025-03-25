@@ -32,9 +32,7 @@ api_logger.info("Inicializando API FORCA_V1")
 # Inicializar o sistema durante o carregamento da API
 api_logger.info("Inicializando componentes do sistema...")
 try:
-    # Inicializar o sistema sem criar/resetar o banco de dados para evitar erros
-    # Uma vez que a função Supabase exec_sql não está disponível
-    api_logger.info("Inicializando sistema sem tentar criar tabelas de banco de dados")
+    # Inicializar o sistema sem criar/resetar o banco de dados
     init_result = initialize_system(init_db=False, force_reset=False)
     
     if init_result["status"] == "success":
@@ -48,9 +46,6 @@ try:
         if init_result.get("erros"):
             for erro in init_result["erros"][:3]:  # Mostrar até 3 erros
                 api_logger.error(f"Erro: {erro}")
-                
-    api_logger.info("Tabelas de banco de dados não foram inicializadas automaticamente")
-    api_logger.info("Crie manualmente as tabelas necessárias no console do Supabase")
 except Exception as e:
     api_logger.error(f"Exceção ao inicializar o sistema: {str(e)}")
     api_logger.error(traceback.format_exc())

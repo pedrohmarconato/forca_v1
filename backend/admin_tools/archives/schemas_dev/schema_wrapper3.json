@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "required": ["treinamento_id", "operacao", "timestamp", "dados", "mapeamento_tabelas", "validacao"],
+  "properties": {
+    "treinamento_id": {"type": "string"},
+    "operacao": {"type": "string"},
+    "timestamp": {"type": "string"},
+    "dados": {"type": "object"},
+    "mapeamento_tabelas": {"type": "object"},
+    "validacao": {"type": "object"}
+  }
+}

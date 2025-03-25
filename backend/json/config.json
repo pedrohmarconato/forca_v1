@@ -1,0 +1,1 @@
+{"version": "1.0", "config": {"default_prompt_path": "../prompt/", "default_schema_path": "../schemas/", "log_level": "INFO"}}

@@ -20,14 +20,10 @@ from backend.utils.config import get_claude_config, get_supabase_config, get_db_
 # Configurar logger
 logger = WrapperLogger("IntegrationSystem")
 
-def initialize_system(init_db: bool = True, force_reset: bool = False) -> Dict[str, Any]:
+def initialize_system() -> Dict[str, Any]:
     """
     Inicializa todos os componentes do sistema FORCA.
     
-    Args:
-        init_db (bool): Se True, inicializa as tabelas do banco de dados
-        force_reset (bool): Se True, força reset completo das tabelas (usado apenas se init_db=True)
-        
     Returns:
         Dict: Resultado da inicialização dos componentes
     """
@@ -82,50 +78,12 @@ def initialize_system(init_db: bool = True, force_reset: bool = False) -> Dict[s
         logger.info("Inicializando DistribuidorBD...")
         try:
             db_config = get_db_config()
-            # Inicialmente não verificar tabelas, faremos isso manualmente se init_db=True
             distribuidor = DistribuidorBD(config_db=db_config, check_tables=False)
             resultado["componentes"]["distribuidor_bd"] = {
                 "status": "success",
                 "message": "DistribuidorBD inicializado com sucesso"
             }
             logger.info("DistribuidorBD inicializado com sucesso")
-            
-            # Inicializar tabelas do banco de dados se solicitado
-            if init_db:
-                logger.info(f"Inicializando tabelas do banco de dados (force_reset={force_reset})...")
-                try:
-                    db_resultado = distribuidor.inicializar_tabelas(force_reset=force_reset)
-                    
-                    if db_resultado.get("sucesso"):
-                        resultado["componentes"]["banco_dados"] = {
-                            "status": "success",
-                            "message": db_resultado.get("mensagem", "Tabelas inicializadas com sucesso"),
-                            "detalhes": {
-                                "tabelas_criadas": db_resultado.get("tabelas_criadas", 0),
-                                "indices_criados": db_resultado.get("indices_criados", 0),
-                                "funcoes_criadas": db_resultado.get("funcoes_criadas", 0),
-                                "triggers_criados": db_resultado.get("triggers_criados", 0)
-                            }
-                        }
-                        logger.info(f"Banco de dados inicializado com sucesso: {db_resultado.get('mensagem', '')}")
-                    else:
-                        error_msg = f"Erro ao inicializar tabelas: {db_resultado.get('mensagem', 'Erro desconhecido')}"
-                        logger.error(error_msg)
-                        resultado["componentes"]["banco_dados"] = {
-                            "status": "error",
-                            "message": error_msg,
-                            "detalhes": db_resultado
-                        }
-                        resultado["erros"].append(error_msg)
-                except Exception as e:
-                    error_msg = f"Exceção ao inicializar tabelas: {str(e)}"
-                    logger.error(error_msg)
-                    logger.error(traceback.format_exc())
-                    resultado["componentes"]["banco_dados"] = {
-                        "status": "error",
-                        "message": error_msg
-                    }
-                    resultado["erros"].append(error_msg)
         except Exception as e:
             error_msg = f"Erro ao inicializar DistribuidorBD: {str(e)}"
             logger.error(error_msg)
@@ -161,8 +119,6 @@ def main():
     
     # Opções de inicialização
     parser.add_argument('--init', action='store_true', help='Inicializar o sistema')
-    parser.add_argument('--no-db-init', action='store_true', help='Não inicializar o banco de dados')
-    parser.add_argument('--reset-db', action='store_true', help='Resetar banco de dados (remover e recriar tabelas)')
     
     # Opções de saída
     parser.add_argument('--output', type=str, help='Arquivo para salvar resultado da inicialização em formato JSON')
@@ -183,16 +139,8 @@ def main():
     if args.init:
         print("Inicializando sistema FORCA...")
         
-        # Determinar opções de inicialização
-        init_db = not args.no_db_init
-        force_reset = args.reset_db
-        
-        # Se reset_db=True, garantir que init_db também seja True
-        if force_reset:
-            init_db = True
-        
         # Inicializar sistema
-        resultado = initialize_system(init_db=init_db, force_reset=force_reset)
+        resultado = initialize_system()
         
         # Exibir resultado resumido
         status = resultado["status"]

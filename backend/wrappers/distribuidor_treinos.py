@@ -27,14 +27,14 @@ class TabelaMapping:
 
 
 class DistribuidorBD:
-    def __init__(self, config_db: Optional[Dict[str, Any]] = None, modo_simulacao: bool = False, check_tables: bool = True):
+    def __init__(self, config_db: Optional[Dict[str, Any]] = None, modo_simulacao: bool = False, check_tables: bool = False):
         """
         Inicializa o Distribuidor de Treinos para o BD.
         
         Args:
             config_db (Dict, optional): Configuração de conexão com o banco de dados
             modo_simulacao (bool): Se True, opera em modo de simulação sem conexão real
-            check_tables (bool): Se True, verifica se as tabelas necessárias existem no banco de dados
+            check_tables (bool): Se False (padrão), não verifica se as tabelas necessárias existem no banco de dados
         """
         # Configurar logger
         self.logger = WrapperLogger("Wrapper3_Distribuidor")
@@ -94,23 +94,7 @@ class DistribuidorBD:
         # Níveis de tempo disponível atualizados para 5 níveis
         self.tempos_disponiveis = ["muito_curto", "curto", "padrao", "longo", "muito_longo"]
         
-        # Verificar e inicializar tabelas se necessário
-        if check_tables and not self.modo_simulacao and self.conexao_db and self.conexao_db.get("status") == "connected":
-            try:
-                self.logger.info("Verificando tabelas do banco de dados...")
-                resultado = self.inicializar_tabelas(force_reset=False)
-                
-                if resultado.get("sucesso"):
-                    self.logger.info(resultado.get("mensagem", "Verificação de tabelas concluída"))
-                    if resultado.get("acao_realizada") == "inicializacao":
-                        self.logger.info(f"Tabelas criadas: {resultado.get('tabelas_criadas', 0)}")
-                        self.logger.info(f"Índices criados: {resultado.get('indices_criados', 0)}")
-                else:
-                    self.logger.warning(f"Verificação de tabelas falhou: {resultado.get('mensagem', 'Erro desconhecido')}")
-                    self.logger.warning("Continuando inicialização mesmo assim")
-            except Exception as e:
-                self.logger.error(f"Erro durante verificação de tabelas: {str(e)}")
-                self.logger.warning("Continuando inicialização mesmo com erro na verificação de tabelas")
+        # Inicialização sem verificação automática de tabelas
         
         self.logger.info("Distribuidor BD inicializado com sucesso")
     

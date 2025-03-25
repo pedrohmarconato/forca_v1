@@ -1,59 +1,44 @@
-# Projeto FORCA_V1
+# FORCA_V1 - Sistema de Geração e Adaptação de Treinos
 
 Sistema de geração e adaptação de planos de treinamento utilizando inteligência artificial.
 
-## Estrutura do Projeto
+## Componentes Principais
 
-O projeto está organizado nas seguintes pastas:
+### Backend
 
-### backend/
-Contém todos os componentes do backend da aplicação:
-- `api/`: API REST para comunicação com o frontend
-- `wrappers/`: Módulos de integração e wrappers para processamento de dados
-- `database/`: Componentes de acesso ao banco de dados e scripts de inicialização
-- `utils/`: Utilitários como logger, configuração e resolução de caminhos
-- `json/`: Arquivos JSON para configuração dos wrappers
-- `prompt/`: Templates de prompts utilizados pelos wrappers
-- `schemas/`: Esquemas JSON para validação de dados
-- `tests/`: Testes automatizados
+- **API RESTful**: Interface para interação com o frontend
+- **Wrappers**:
+  - **Treinador Especialista**: Gera planos de treinamento personalizados
+  - **Sistema de Adaptação**: Adapta treinos baseado em condições variáveis
+  - **Distribuidor BD**: Gerencia a persistência e distribuição dos dados
 
-### frontend/
-Contém a aplicação React para interface do usuário:
-- `src/`: Código fonte da aplicação
-  - `assets/`: Imagens, ícones e outros recursos estáticos
-  - `components/`: Componentes React reutilizáveis
-  - `context/`: Contextos React para gerenciamento de estado
-  - `hooks/`: Hooks React customizados
-  - `navigation/`: Componentes de navegação
-  - `screens/`: Telas/páginas da aplicação
-  - `store/`: Gerenciamento de estado (Redux/Context)
-  - `styles/`: Estilos globais e temas
-  - `utils/`: Funções utilitárias compartilhadas
+### Frontend
 
-### docs/
-Documentação do projeto:
-- `BACKEND_README.md`: Documentação específica do backend
+- **Interface React**: Componentes para interação do usuário
+- **Sistema de Auth**: Autenticação e gerenciamento de usuários
+- **Visualização de Treinos**: Apresentação dos planos de treino
 
-## Configuração Inicial
+## Configuração
 
 ### Requisitos
+
 - Python 3.8+
 - Node.js 14+
 - Conta Supabase (para armazenamento de dados)
 - Conta Anthropic Claude (para geração de planos)
 
-### Instalação de Dependências
+### Instalação
 
 ```bash
-# Instalar dependências do backend
+# Backend
 pip install -r requirements.txt
 
-# Instalar dependências do frontend
+# Frontend
 cd frontend
 npm install
 ```
 
-### Configuração do Ambiente
+### Configuração do .env
 
 Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 
@@ -73,33 +58,43 @@ LOG_LEVEL=INFO
 ENVIRONMENT=development
 ```
 
-### Inicialização do Banco de Dados
-
-Para configurar o banco de dados Supabase:
+## Execução
 
 ```bash
-# Verificar conexão com Supabase
-python backend/database/db_manager.py testconn
-
-# Verificar estado atual do banco de dados
-python backend/database/db_manager.py check
-
-# Inicializar tabelas no banco de dados
-python backend/database/db_manager.py init
-```
-
-## Como executar
-
-### Backend
-```bash
+# Backend
 cd backend/api
 python app.py
-```
 
-### Frontend
-```bash
+# Frontend
 cd frontend
 npm start
+```
+
+## Administração do Banco de Dados
+
+Scripts administrativos para o banco de dados estão localizados em `backend/admin_tools/`. Estes scripts são utilizados para tarefas específicas de administração e não são parte do fluxo normal da aplicação.
+
+A aplicação foi configurada para não tentar criar tabelas automaticamente. O administrador do sistema deve executar os scripts manualmente quando necessário.
+
+## Estrutura do Projeto
+
+```
+FORCA_V1/
+├── backend/
+│   ├── api/             # API principal
+│   ├── admin_tools/     # Scripts administrativos (BD)
+│   ├── json/            # Configurações JSON para wrappers
+│   ├── prompt/          # Prompts para IA
+│   ├── schemas/         # Schemas essenciais
+│   ├── utils/           # Utilitários (logger, config)
+│   ├── wrappers/        # Componentes principais
+│   ├── __init__.py
+├── frontend/
+│   ├── public/          # Arquivos estáticos
+│   ├── src/             # Código React
+│   ├── package.json
+├── .env.example
+├── README.md
 ```
 
 ## Funcionalidades

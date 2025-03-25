@@ -1,202 +1,309 @@
 {
-  "treinamento_id": "ab0575a8-655b-4513-aeec-57fd15ae9574",
+  "treinamento_id": "34d61972-6f03-4b15-80a6-e590f29be82e",
   "versao": "1.0",
-  "data_criacao": "2025-03-22T23:53:07.982712",
+  "data_criacao": "2025-03-25T13:24:07.477403",
   "usuario": {
     "id": "user123",
     "nome": "João Silva",
     "nivel": "intermediário",
     "objetivos": [
       {
-        "objetivo_id": "OBJ00001",
+        "objetivo_id": "OBJ-01",
         "nome": "Hipertrofia",
         "prioridade": 1
       },
       {
-        "objetivo_id": "OBJ00002",
+        "objetivo_id": "OBJ-02",
         "nome": "Força",
         "prioridade": 2
       }
     ],
     "restricoes": [
       {
-        "restricao_id": "RES00001",
+        "restricao_id": "RES-01",
         "nome": "Dor no joelho",
         "gravidade": "moderada"
       }
     ]
   },
   "plano_principal": {
-    "nome": "Plano de Treinamento de 12 Semanas",
-    "descricao": "Plano para ganho de hipertrofia e força com foco em membros superiores",
+    "nome": "Plano Hipertrofia João Silva",
+    "descricao": "Plano de 12 semanas para ganho de massa muscular focado em membros superiores.",
     "periodizacao": {
       "tipo": "Linear",
-      "descricao": "Periodização Linear com aumento gradual de intensidade e volume"
+      "descricao": "Periodização linear com aumento progressivo de carga."
     },
     "duracao_semanas": 12,
     "frequencia_semanal": 4,
     "ciclos": [
       {
-        "ciclo_id": "CIC00001",
-        "nome": "Hipertrofia e Força",
+        "ciclo_id": "CIC-01",
+        "nome": "Ciclo Hipertrofia 1",
         "ordem": 1,
-        "duracao_semanas": 12,
-        "objetivo": "Ganho de massa muscular e força com foco em membros superiores",
+        "duracao_semanas": 4,
+        "objetivo": "Hipertrofia",
         "microciclos": [
           {
             "semana": 1,
             "volume": "Moderado",
-            "intensidade": "Baixa",
-            "foco": "Adaptação e Técnica",
+            "intensidade": "Leve",
+            "foco": "Adaptação",
             "sessoes": [
               {
-                "sessao_id": "SES00001",
-                "nome": "Treino A - Teste de Força",
-                "tipo": "Resistência",
+                "sessao_id": "SES-01",
+                "nome": "Treino A",
+                "tipo": "Fullbody",
                 "duracao_minutos": 60,
-                "nivel_intensidade": null,
+                "nivel_intensidade": 6,
                 "dia_semana": "segunda",
                 "grupos_musculares": [
                   {
-                    "grupo_id": "GRP00001",
-                    "nome": "Peito",
-                    "prioridade": 2
-                  },
-                  {
-                    "grupo_id": "GRP00002",
-                    "nome": "Costas",
+                    "grupo_id": "GP-01",
+                    "nome": "Peitoral",
                     "prioridade": 1
                   },
                   {
-                    "grupo_id": "GRP00003",
+                    "grupo_id": "GP-02",
+                    "nome": "Costas",
+                    "prioridade": 2
+                  },
+                  {
+                    "grupo_id": "GP-03",
                     "nome": "Ombros",
                     "prioridade": 1
                   },
                   {
-                    "grupo_id": "GRP00004",
+                    "grupo_id": "GP-04",
                     "nome": "Bíceps",
+                    "prioridade": 1
+                  },
+                  {
+                    "grupo_id": "GP-05",
+                    "nome": "Tríceps",
+                    "prioridade": 1
+                  },
+                  {
+                    "grupo_id": "GP-06",
+                    "nome": "Coxas",
                     "prioridade": 2
                   }
                 ],
                 "exercicios": [
                   {
-                    "exercicio_id": "EXE00001",
-                    "nome": "Supino Reto com Barra",
+                    "exercicio_id": "EX-01",
+                    "nome": "Supino Reto",
                     "ordem": 1,
                     "equipamento": "Barra",
                     "series": 3,
-                    "repeticoes": "Testar 1RM",
+                    "repeticoes": "8-12",
                     "percentual_rm": null,
-                    "tempo_descanso": "3-5min",
+                    "tempo_descanso": 60,
                     "cadencia": "2020",
-                    "metodo": "Piramidal",
-                    "progressao": [],
-                    "observacoes": "Fazer aquecimento com cargas leves"
+                    "metodo": "Falha",
+                    "progressao": [
+                      {
+                        "semana": 1,
+                        "ajuste": "Teste de RM"
+                      },
+                      {
+                        "semana": 2,
+                        "ajuste": "50% de 1RM"
+                      },
+                      {
+                        "semana": 3,
+                        "ajuste": "Aumento de 5% de 1RM"
+                      },
+                      {
+                        "semana": 4,
+                        "ajuste": "Aumento de 5-10% de 1RM"
+                      }
+                    ],
+                    "observacoes": "Amplitude completa."
                   },
                   {
-                    "exercicio_id": "EXE00002",
-                    "nome": "Barra Fixa",
+                    "exercicio_id": "EX-02",
+                    "nome": "Puxada Aberta",
                     "ordem": 2,
-                    "equipamento": "Barra fixa",
+                    "equipamento": "Máquina",
                     "series": 3,
-                    "repeticoes": "Testar 1RM",
+                    "repeticoes": "10-12",
                     "percentual_rm": null,
-                    "tempo_descanso": "3-5min",
-                    "cadencia": "",
-                    "metodo": "Piramidal",
-                    "progressao": [],
-                    "observacoes": "Fazer variações se necessário"
+                    "tempo_descanso": 60,
+                    "cadencia": "2020",
+                    "metodo": "Falha",
+                    "progressao": [
+                      {
+                        "semana": 1,
+                        "ajuste": "Teste de RM"
+                      },
+                      {
+                        "semana": 2,
+                        "ajuste": "50% de 1RM"
+                      },
+                      {
+                        "semana": 3,
+                        "ajuste": "Aumento de 5% de 1RM"
+                      },
+                      {
+                        "semana": 4,
+                        "ajuste": "Aumento de 5-10% de 1RM"
+                      }
+                    ],
+                    "observacoes": ""
                   },
                   {
-                    "exercicio_id": "EXE00003",
-                    "nome": "Desenvolvimento com Halteres",
+                    "exercicio_id": "EX-03",
+                    "nome": "Desenvolvimento",
                     "ordem": 3,
                     "equipamento": "Halteres",
                     "series": 3,
-                    "repeticoes": "Testar 1RM",
+                    "repeticoes": "10-12",
                     "percentual_rm": null,
-                    "tempo_descanso": "3-5min",
+                    "tempo_descanso": 60,
                     "cadencia": "2020",
-                    "metodo": "Piramidal",
-                    "progressao": [],
+                    "metodo": "Falha",
+                    "progressao": [
+                      {
+                        "semana": 1,
+                        "ajuste": "Teste de RM"
+                      },
+                      {
+                        "semana": 2,
+                        "ajuste": "50% de 1RM"
+                      },
+                      {
+                        "semana": 3,
+                        "ajuste": "Aumento de 5% de 1RM"
+                      },
+                      {
+                        "semana": 4,
+                        "ajuste": "Aumento de 5-10% de 1RM"
+                      }
+                    ],
+                    "observacoes": "Levar até o queixo."
+                  },
+                  {
+                    "exercicio_id": "EX-04",
+                    "nome": "Rosca Bíceps",
+                    "ordem": 4,
+                    "equipamento": "Barra W",
+                    "series": 3,
+                    "repeticoes": "10-12",
+                    "percentual_rm": null,
+                    "tempo_descanso": 60,
+                    "cadencia": "2121",
+                    "metodo": "Falha",
+                    "progressao": [
+                      {
+                        "semana": 1,
+                        "ajuste": "Teste de RM"
+                      },
+                      {
+                        "semana": 2,
+                        "ajuste": "50% de 1RM"
+                      },
+                      {
+                        "semana": 3,
+                        "ajuste": "Aumento de 5% de 1RM"
+                      },
+                      {
+                        "semana": 4,
+                        "ajuste": "Aumento de 5-10% de 1RM"
+                      }
+                    ],
                     "observacoes": ""
                   },
                   {
-                    "exercicio_id": "EXE00004",
-                    "nome": "Rosca Direta com Barra",
-                    "ordem": 4,
-                    "equipamento": "Barra",
+                    "exercicio_id": "EX-05",
+                    "nome": "Tríceps na polia",
+                    "ordem": 5,
+                    "equipamento": "Polia",
                     "series": 3,
-                    "repeticoes": "Testar 1RM",
+                    "repeticoes": "10-12",
                     "percentual_rm": null,
-                    "tempo_descanso": "3-5min",
+                    "tempo_descanso": 45,
                     "cadencia": "2020",
-                    "metodo": "Piramidal",
-                    "progressao": [],
+                    "metodo": "Falha",
+                    "progressao": [
+                      {
+                        "semana": 1,
+                        "ajuste": "Teste de RM"
+                      },
+                      {
+                        "semana": 2,
+                        "ajuste": "50% de 1RM"
+                      },
+                      {
+                        "semana": 3,
+                        "ajuste": "Aumento de 5% de 1RM"
+                      },
+                      {
+                        "semana": 4,
+                        "ajuste": "Aumento de 5-10% de 1RM"
+                      }
+                    ],
                     "observacoes": ""
+                  },
+                  {
+                    "exercicio_id": "EX-06",
+                    "nome": "Mesa flexora",
+                    "ordem": 6,
+                    "equipamento": "Máquina",
+                    "series": 3,
+                    "repeticoes": "12-15",
+                    "percentual_rm": null,
+                    "tempo_descanso": 60,
+                    "cadencia": "2121",
+                    "metodo": "Falha",
+                    "progressao": [
+                      {
+                        "semana": 1,
+                        "ajuste": "Teste de RM"
+                      },
+                      {
+                        "semana": 2,
+                        "ajuste": "40% de 1RM"
+                      },
+                      {
+                        "semana": 3,
+                        "ajuste": "Aumento de 5% de 1RM"
+                      },
+                      {
+                        "semana": 4,
+                        "ajuste": "Aumento de 5% de 1RM"
+                      }
+                    ],
+                    "observacoes": "Cuidado com o joelho"
                   }
                 ],
                 "aquecimento": {
-                  "duracao_minutos": 5,
-                  "exercicios": []
+                  "duracao_minutos": 10,
+                  "exercicios": [
+                    {
+                      "exercicio_id": "EX-AQ-01",
+                      "nome": "Esteira",
+                      "tipo": "Cardio",
+                      "duracao_minutos": 5,
+                      "intensidade": "Leve"
+                    },
+                    {
+                      "exercicio_id": "EX-AQ-02",
+                      "nome": "Mobilidade Ativa",
+                      "tipo": "Mobilização",
+                      "duracao_minutos": 5
+                    }
+                  ]
                 },
                 "desaquecimento": {
                   "duracao_minutos": 5,
-                  "exercicios": []
-                }
-              },
-              {
-                "sessao_id": "SES00002",
-                "nome": "Treino B - Força Inferior",
-                "tipo": "Resistência",
-                "duracao_minutos": 60,
-                "nivel_intensidade": "Alta",
-                "dia_semana": "terça",
-                "grupos_musculares": [],
-                "exercicios": [],
-                "aquecimento": {
-                  "duracao_minutos": 5,
-                  "exercicios": []
-                },
-                "desaquecimento": {
-                  "duracao_minutos": 5,
-                  "exercicios": []
-                }
-              },
-              {
-                "sessao_id": "SES00003",
-                "nome": "Treino C - Hipertrofia Superior",
-                "tipo": "Resistência",
-                "duracao_minutos": 60,
-                "nivel_intensidade": "Moderada",
-                "dia_semana": "quinta",
-                "grupos_musculares": [],
-                "exercicios": [],
-                "aquecimento": {
-                  "duracao_minutos": 5,
-                  "exercicios": []
-                },
-                "desaquecimento": {
-                  "duracao_minutos": 5,
-                  "exercicios": []
-                }
-              },
-              {
-                "sessao_id": "SES00004",
-                "nome": "Treino D - Cardio e Mobilidade",
-                "tipo": "Cardio",
-                "duracao_minutos": 30,
-                "nivel_intensidade": "Baixa",
-                "dia_semana": "sexta",
-                "grupos_musculares": [],
-                "exercicios": [],
-                "aquecimento": {
-                  "duracao_minutos": 5,
-                  "exercicios": []
-                },
-                "desaquecimento": {
-                  "duracao_minutos": 5,
-                  "exercicios": []
+                  "exercicios": [
+                    {
+                      "exercicio_id": "EX-DAQ-01",
+                      "nome": "Alongamento Estático",
+                      "tipo": "Alongamento",
+                      "duracao_minutos": 5
+                    }
+                  ]
                 }
               }
             ]
@@ -205,8 +312,8 @@
       }
     ],
     "metricas": {
-      "calorias_estimadas": 700,
-      "nivel_fadiga_esperado": "Alto",
+      "calorias_estimadas": 450,
+      "nivel_fadiga_esperado": 7,
       "tempo_recuperacao_horas": 48
     }
   }

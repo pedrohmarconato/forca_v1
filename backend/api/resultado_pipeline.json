@@ -2,146 +2,351 @@
   "status": "success",
   "steps_completed": 3,
   "resultado_db": {
-    "status": "partial_success",
-    "mensagem": "Executados 0 comandos com sucesso, 16 falhas",
-    "comandos_executados": 0,
-    "comandos_falha": 16,
-    "tempo_execucao": 43.591099977493286,
-    "estatisticas": {
-      "Fato_Treinamento": {
-        "total": 1,
-        "sucesso": 0,
-        "falha": 1
-      },
-      "Fato_CicloTreinamento": {
-        "total": 1,
-        "sucesso": 0,
-        "falha": 1
-      },
-      "Fato_MicrocicloSemanal": {
-        "total": 1,
-        "sucesso": 0,
-        "falha": 1
-      },
-      "Fato_SessaoTreinamento": {
-        "total": 4,
-        "sucesso": 0,
-        "falha": 4
-      },
-      "Fato_ExercicioSessao": {
-        "total": 4,
-        "sucesso": 0,
-        "falha": 4
-      },
-      "Fato_AdaptacaoTreinamento": {
-        "total": 5,
-        "sucesso": 0,
-        "falha": 5
-      }
-    },
-    "resultados": [
+    "status": "simulated",
+    "mensagem": "Comandos gerados para simulação pois tabelas não existem",
+    "comandos": [
       {
         "tabela": "Fato_Treinamento",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "nome": "Plano Hipertrofia João Silva",
+          "descricao": "Plano de 12 semanas para ganho de massa muscular focado em membros superiores.",
+          "duracao_semanas": 12,
+          "frequencia_semanal": 4,
+          "treinamento_id": "34d61972-6f03-4b15-80a6-e590f29be82e",
+          "usuario_id": null,
+          "data_criacao": "2025-03-25T13:26:07.637397",
+          "tipo_periodizacao": "Linear"
+        },
+        "where": {
+          "treinamento_id": "34d61972-6f03-4b15-80a6-e590f29be82e"
+        }
       },
       {
         "tabela": "Fato_CicloTreinamento",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "ciclo_id": "CIC-01",
+          "treinamento_id": "34d61972-6f03-4b15-80a6-e590f29be82e",
+          "nome": "Ciclo Hipertrofia 1",
+          "ordem": 1,
+          "duracao_semanas": 4,
+          "objetivo_especifico": "Hipertrofia"
+        },
+        "where": {
+          "ciclo_id": "CIC-01"
+        }
       },
       {
         "tabela": "Fato_MicrocicloSemanal",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "microciclo_id": "2f839d6b-45db-42bf-9d6b-cd461b6482ec",
+          "ciclo_id": "CIC-01",
+          "semana": 1,
+          "volume_planejado": "Moderado",
+          "intensidade_planejada": "Leve",
+          "foco": "Adaptação"
+        },
+        "where": {
+          "microciclo_id": "2f839d6b-45db-42bf-9d6b-cd461b6482ec"
+        }
       },
       {
         "tabela": "Fato_SessaoTreinamento",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "sessao_id": "SES-01",
+          "microciclo_id": "2f839d6b-45db-42bf-9d6b-cd461b6482ec",
+          "nome": "Treino A",
+          "tipo": "Fullbody",
+          "duracao_minutos": 60,
+          "nivel_intensidade": 6,
+          "dia_semana": "segunda"
+        },
+        "where": {
+          "sessao_id": "SES-01"
+        }
       },
       {
         "tabela": "Fato_ExercicioSessao",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "exercicio_id": "EX-01",
+          "sessao_id": "SES-01",
+          "nome": "Supino Reto",
+          "ordem": 1,
+          "series": 3,
+          "repeticoes": "8-12",
+          "percentual_rm": null,
+          "tempo_descanso_segundos": 60,
+          "metodo_treinamento": "Falha"
+        },
+        "where": {
+          "exercicio_id": "EX-01"
+        }
       },
       {
         "tabela": "Fato_ExercicioSessao",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "exercicio_id": "EX-02",
+          "sessao_id": "SES-01",
+          "nome": "Puxada Aberta",
+          "ordem": 2,
+          "series": 3,
+          "repeticoes": "10-12",
+          "percentual_rm": null,
+          "tempo_descanso_segundos": 60,
+          "metodo_treinamento": "Falha"
+        },
+        "where": {
+          "exercicio_id": "EX-02"
+        }
       },
       {
         "tabela": "Fato_ExercicioSessao",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "exercicio_id": "EX-03",
+          "sessao_id": "SES-01",
+          "nome": "Desenvolvimento",
+          "ordem": 3,
+          "series": 3,
+          "repeticoes": "10-12",
+          "percentual_rm": null,
+          "tempo_descanso_segundos": 60,
+          "metodo_treinamento": "Falha"
+        },
+        "where": {
+          "exercicio_id": "EX-03"
+        }
       },
       {
         "tabela": "Fato_ExercicioSessao",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "exercicio_id": "EX-04",
+          "sessao_id": "SES-01",
+          "nome": "Rosca Bíceps",
+          "ordem": 4,
+          "series": 3,
+          "repeticoes": "10-12",
+          "percentual_rm": null,
+          "tempo_descanso_segundos": 60,
+          "metodo_treinamento": "Falha"
+        },
+        "where": {
+          "exercicio_id": "EX-04"
+        }
       },
       {
-        "tabela": "Fato_SessaoTreinamento",
+        "tabela": "Fato_ExercicioSessao",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "exercicio_id": "EX-05",
+          "sessao_id": "SES-01",
+          "nome": "Tríceps na polia",
+          "ordem": 5,
+          "series": 3,
+          "repeticoes": "10-12",
+          "percentual_rm": null,
+          "tempo_descanso_segundos": 45,
+          "metodo_treinamento": "Falha"
+        },
+        "where": {
+          "exercicio_id": "EX-05"
+        }
       },
       {
-        "tabela": "Fato_SessaoTreinamento",
+        "tabela": "Fato_ExercicioSessao",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
-      },
-      {
-        "tabela": "Fato_SessaoTreinamento",
-        "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "exercicio_id": "EX-06",
+          "sessao_id": "SES-01",
+          "nome": "Mesa flexora",
+          "ordem": 6,
+          "series": 3,
+          "repeticoes": "12-15",
+          "percentual_rm": null,
+          "tempo_descanso_segundos": 60,
+          "metodo_treinamento": "Falha"
+        },
+        "where": {
+          "exercicio_id": "EX-06"
+        }
       },
       {
         "tabela": "Fato_AdaptacaoTreinamento",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "adaptacao_id": "0a73406b-6346-4dea-ac05-e296608f8932",
+          "sessao_original_id": "SES-01",
+          "tipo": "humor",
+          "nivel": "muito_cansado",
+          "duracao_ajustada": 42,
+          "nivel_intensidade_ajustado": 3,
+          "ajustes_aplicados": "{\"intensidade\": -0.2, \"volume\": -0.3, \"foco\": \"Manuten\\u00e7\\u00e3o m\\u00ednima\", \"exercicios_removidos\": [\"EX-03\", \"EX-04\", \"EX-05\", \"EX-06\"], \"exercicios_adicionados\": [], \"exercicios_modificados\": [{\"exercicio_id\": \"EX-01\", \"series_ajuste\": -2, \"repeticoes_ajuste\": \"-4\", \"tempo_descanso_ajuste\": 45}, {\"exercicio_id\": \"EX-02\", \"series_ajuste\": -2, \"repeticoes_ajuste\": \"-4\", \"tempo_descanso_ajuste\": 45}]}"
+        },
+        "where": {
+          "adaptacao_id": "0a73406b-6346-4dea-ac05-e296608f8932"
+        }
       },
       {
         "tabela": "Fato_AdaptacaoTreinamento",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "adaptacao_id": "44748382-0498-40f5-8e09-ede5ad3ca98c",
+          "sessao_original_id": "SES-01",
+          "tipo": "humor",
+          "nivel": "cansado",
+          "duracao_ajustada": 48,
+          "nivel_intensidade_ajustado": 4,
+          "ajustes_aplicados": "{\"intensidade\": -0.15, \"volume\": -0.2, \"foco\": \"Manuten\\u00e7\\u00e3o\", \"exercicios_removidos\": [\"EX-05\", \"EX-06\"], \"exercicios_adicionados\": [], \"exercicios_modificados\": [{\"exercicio_id\": \"EX-01\", \"series_ajuste\": -1, \"repeticoes_ajuste\": \"-2\", \"tempo_descanso_ajuste\": 30}, {\"exercicio_id\": \"EX-02\", \"series_ajuste\": -1, \"repeticoes_ajuste\": \"-2\", \"tempo_descanso_ajuste\": 30}, {\"exercicio_id\": \"EX-03\", \"series_ajuste\": -1, \"repeticoes_ajuste\": \"-2\", \"tempo_descanso_ajuste\": 30}]}"
+        },
+        "where": {
+          "adaptacao_id": "44748382-0498-40f5-8e09-ede5ad3ca98c"
+        }
       },
       {
         "tabela": "Fato_AdaptacaoTreinamento",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "adaptacao_id": "af1e97ef-417f-43c4-b771-fbef6181ac0a",
+          "sessao_original_id": "SES-01",
+          "tipo": "humor",
+          "nivel": "neutro",
+          "duracao_ajustada": 60,
+          "nivel_intensidade_ajustado": 6,
+          "ajustes_aplicados": "{\"intensidade\": 0, \"volume\": 0, \"foco\": \"Normal\", \"exercicios_removidos\": [], \"exercicios_adicionados\": [], \"exercicios_modificados\": []}"
+        },
+        "where": {
+          "adaptacao_id": "af1e97ef-417f-43c4-b771-fbef6181ac0a"
+        }
       },
       {
         "tabela": "Fato_AdaptacaoTreinamento",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "adaptacao_id": "6b8b236d-4276-4382-a7a1-ecd93e7e61cb",
+          "sessao_original_id": "SES-01",
+          "tipo": "humor",
+          "nivel": "disposto",
+          "duracao_ajustada": 66,
+          "nivel_intensidade_ajustado": 7,
+          "ajustes_aplicados": "{\"intensidade\": 0.1, \"volume\": 0.15, \"foco\": \"Progress\\u00e3o\", \"exercicios_removidos\": [], \"exercicios_adicionados\": [{\"exercicio_id\": \"9d3ffb24-c259-497d-9014-8a42b84aa752\", \"nome\": \"Exerc\\u00edcio adicional para estado disposto\", \"ordem\": 7, \"series\": 3, \"repeticoes\": \"10-12\", \"tempo_descanso\": 60}], \"exercicios_modificados\": []}"
+        },
+        "where": {
+          "adaptacao_id": "6b8b236d-4276-4382-a7a1-ecd93e7e61cb"
+        }
       },
       {
         "tabela": "Fato_AdaptacaoTreinamento",
         "operacao": "INSERT",
-        "resultado": "error",
-        "id": null
+        "dados": {
+          "adaptacao_id": "f7db1d70-3137-4bab-9441-9e0948c790b0",
+          "sessao_original_id": "SES-01",
+          "tipo": "humor",
+          "nivel": "muito_disposto",
+          "duracao_ajustada": 72,
+          "nivel_intensidade_ajustado": 7,
+          "ajustes_aplicados": "{\"intensidade\": 0.2, \"volume\": 0.25, \"foco\": \"Sobrecarga e intensidade m\\u00e1xima\", \"exercicios_removidos\": [], \"exercicios_adicionados\": [{\"exercicio_id\": \"09a667ab-4b64-40e7-bb45-861d3c56e11a\", \"nome\": \"Exerc\\u00edcio adicional de alta intensidade\", \"ordem\": 7, \"series\": 4, \"repeticoes\": \"8-10\", \"tempo_descanso\": 45}, {\"exercicio_id\": \"a94d5947-c4b9-4213-8c33-66c3e64d8a06\", \"nome\": \"Exerc\\u00edcio t\\u00e9cnica avan\\u00e7ada\", \"ordem\": 8, \"series\": 3, \"repeticoes\": \"6-8\", \"tempo_descanso\": 90}], \"exercicios_modificados\": [{\"exercicio_id\": \"EX-01\", \"series_ajuste\": 1, \"repeticoes_ajuste\": \"-1\", \"tempo_descanso_ajuste\": -10}, {\"exercicio_id\": \"EX-02\", \"series_ajuste\": 1, \"repeticoes_ajuste\": \"-1\", \"tempo_descanso_ajuste\": -10}, {\"exercicio_id\": \"EX-03\", \"series_ajuste\": 1, \"repeticoes_ajuste\": \"-1\", \"tempo_descanso_ajuste\": -10}, {\"exercicio_id\": \"EX-04\", \"series_ajuste\": 1, \"repeticoes_ajuste\": \"-1\", \"tempo_descanso_ajuste\": -10}, {\"exercicio_id\": \"EX-05\", \"series_ajuste\": 1, \"repeticoes_ajuste\": \"-1\", \"tempo_descanso_ajuste\": -10}, {\"exercicio_id\": \"EX-06\", \"series_ajuste\": 1, \"repeticoes_ajuste\": \"-1\", \"tempo_descanso_ajuste\": -10}]}"
+        },
+        "where": {
+          "adaptacao_id": "f7db1d70-3137-4bab-9441-9e0948c790b0"
+        }
+      },
+      {
+        "tabela": "Fato_AdaptacaoTreinamento",
+        "operacao": "INSERT",
+        "dados": {
+          "adaptacao_id": "5c2381a7-6dff-4dc6-a98a-a5aa3fb83538",
+          "sessao_original_id": "SES-01",
+          "tipo": "tempo",
+          "nivel": "muito_curto",
+          "duracao_ajustada": 20,
+          "estrategia": "Mínimo essencial",
+          "exercicios_priorizados": "[\"EX-01\", \"EX-02\"]",
+          "exercicios_removidos": "[\"EX-03\", \"EX-04\", \"EX-05\", \"EX-06\"]"
+        },
+        "where": {
+          "adaptacao_id": "5c2381a7-6dff-4dc6-a98a-a5aa3fb83538"
+        }
+      },
+      {
+        "tabela": "Fato_AdaptacaoTreinamento",
+        "operacao": "INSERT",
+        "dados": {
+          "adaptacao_id": "18beb91a-2def-4fba-8a69-bc02565ce486",
+          "sessao_original_id": "SES-01",
+          "tipo": "tempo",
+          "nivel": "curto",
+          "duracao_ajustada": 30,
+          "estrategia": "Foco em compostos",
+          "exercicios_priorizados": "[\"EX-01\", \"EX-02\", \"EX-03\", \"EX-04\"]",
+          "exercicios_removidos": "[\"EX-05\", \"EX-06\"]"
+        },
+        "where": {
+          "adaptacao_id": "18beb91a-2def-4fba-8a69-bc02565ce486"
+        }
+      },
+      {
+        "tabela": "Fato_AdaptacaoTreinamento",
+        "operacao": "INSERT",
+        "dados": {
+          "adaptacao_id": "d9a7b7f8-ff14-4c46-9d57-9977102bdd1c",
+          "sessao_original_id": "SES-01",
+          "tipo": "tempo",
+          "nivel": "padrao",
+          "duracao_ajustada": 60,
+          "estrategia": "Treino completo",
+          "exercicios_priorizados": "[]",
+          "exercicios_removidos": "[]"
+        },
+        "where": {
+          "adaptacao_id": "d9a7b7f8-ff14-4c46-9d57-9977102bdd1c"
+        }
+      },
+      {
+        "tabela": "Fato_AdaptacaoTreinamento",
+        "operacao": "INSERT",
+        "dados": {
+          "adaptacao_id": "a9738055-c234-4b2c-afa0-f78b05d8996d",
+          "sessao_original_id": "SES-01",
+          "tipo": "tempo",
+          "nivel": "longo",
+          "duracao_ajustada": 90,
+          "estrategia": "Treino expandido",
+          "exercicios_priorizados": "[]",
+          "exercicios_removidos": "[]"
+        },
+        "where": {
+          "adaptacao_id": "a9738055-c234-4b2c-afa0-f78b05d8996d"
+        }
+      },
+      {
+        "tabela": "Fato_AdaptacaoTreinamento",
+        "operacao": "INSERT",
+        "dados": {
+          "adaptacao_id": "91eb417a-0b28-4fc6-917a-38103ae23ff3",
+          "sessao_original_id": "SES-01",
+          "tipo": "tempo",
+          "nivel": "muito_longo",
+          "duracao_ajustada": 120,
+          "estrategia": "Treino expandido com técnicas avançadas",
+          "exercicios_priorizados": "[]",
+          "exercicios_removidos": "[]"
+        },
+        "where": {
+          "adaptacao_id": "91eb417a-0b28-4fc6-917a-38103ae23ff3"
+        }
       }
     ]
   },
   "tempo_execucao": {
-    "total": 115.47761464118958,
-    "etapa1": 71.13320231437683,
-    "etapa2": 0.015336275100708008,
-    "etapa3": 43.63459610939026
+    "total": 121.18280911445618,
+    "etapa1": 120.0927004814148,
+    "etapa2": 0.018748760223388672,
+    "etapa3": 0.9738547801971436
   }
 }

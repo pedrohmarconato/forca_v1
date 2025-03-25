@@ -1,135 +1,150 @@
-# Ferramentas de Banco de Dados para FORCA_V1
+# Banco de Dados FORCA_V1
 
-Este diretório contém as ferramentas para configuração, inicialização e migração de dados para o banco de dados Supabase utilizado pelo sistema FORCA_V1.
+Este diretório contém os scripts e arquivos relacionados ao banco de dados do sistema FORCA_V1.
 
-## Arquivos
+## Estrutura do Banco de Dados
 
-- `db_manager.py` - Script principal de gerenciamento do banco de dados (CLI)
-- `supabase_init.py` - Script de inicialização das tabelas no Supabase
-- `data_migration.py` - Script de migração de dados do modo simulação para o Supabase
-- `Distribuidor para BD.txt` - Especificação do modelo de dados
+O banco de dados segue um modelo de *star schema* (esquema estrela) com:
 
-## Requisitos
+- **Tabelas de Dimensão** (`dim_*`): Armazenam entidades fundamentais e suas características
+- **Tabelas de Fato** (`fato_*`): Armazenam eventos, transações e medições do sistema
 
-Certifique-se de que todas as dependências necessárias estão instaladas:
+### Organização Principal das Tabelas
 
-```bash
-pip install -r ../../requirements.txt
-```
+1. **Dimensões de Usuário e Configuração**
+   - `dim_usuario`: Cadastro de usuários
+   - `dim_objetivo`: Objetivos de treinamento
+   - `dim_restricao`: Restrições físicas e limitações
 
-É necessário também configurar as variáveis de ambiente no arquivo `.env` na raiz do projeto:
+2. **Dimensões de Exercícios e Grupos Musculares**
+   - `dim_grupomuscular`: Grupos musculares do corpo
+   - `dim_exercicio`: Catálogo de exercícios
 
-```
-SUPABASE_URL=https://seu-projeto.supabase.co
-SUPABASE_API_KEY=sua-api-key
-SUPABASE_SERVICE_KEY=sua-service-role-key
-```
+3. **Dimensões de Metodologia**
+   - `dim_modeloperiodizacao`: Modelos de periodização
+   - `dim_metodotreinamento`: Métodos de treinamento
+   - `dim_tiposessao`: Tipos de sessão de treino
+   - `dim_variaveltreinamento`: Variáveis manipuláveis do treinamento
 
-## Uso
+4. **Dimensões de Adaptação**
+   - `dim_humor`: Estados de humor para adaptação
+   - `dim_tempodisponivel`: Categorias de tempo disponível
 
-### Gerenciador de Banco de Dados (CLI)
+5. **Fatos de Planejamento de Treinamento**
+   - `fato_treinamento`: Planos de treinamento
+   - `fato_ciclotreinamento`: Ciclos dentro de um treinamento
+   - `fato_microciclosemanal`: Semanas de treino
+   - `fato_sessaotreinamento`: Sessões de treino
+   - `fato_sessaogrupomusuclar`: Grupos musculares por sessão
+   - `fato_exerciciossessao`: Exercícios por sessão
 
-O script `db_manager.py` oferece uma interface de linha de comando para gerenciar o banco de dados.
+6. **Fatos de Adaptação e Personalização**
+   - `fato_adaptacaotreinamento`: Adaptações de treinamento
+   - `fato_usuarioobjetivo`: Objetivos por usuário
+   - `fato_usuariorestricao`: Restrições por usuário
 
-```bash
-# Ver ajuda
-python db_manager.py --help
+7. **Fatos de Registro e Progressão**
+   - `fato_progressaoexercicio`: Progressão nos exercícios
+   - `fato_substituicaoexercicio`: Substituições de exercícios
+   - `fato_registrotreino`: Registro de treinos realizados
+   - `fato_registroexercicio`: Detalhes dos exercícios realizados
+   - `fato_metricaprogresso`: Métricas de progresso do usuário
 
-# Testar conexão com Supabase
-python db_manager.py testconn
+## Scripts de Banco de Dados
 
-# Verificar estado do banco de dados
-python db_manager.py check
-python db_manager.py check -v  # Modo detalhado
+- **`create_indices.sql`**: Script principal para criar todas as tabelas, índices e chaves estrangeiras
+- **`schema_update.sql`**: Script para atualizar e corrigir o esquema de tabelas existentes
+- **`supabase_init.py`**: Script Python para inicialização programática do banco de dados
+- **`db_manager.py`**: Gerenciador de banco de dados para operações comuns
+- **`data_migration.py`**: Script para migração de dados (quando necessário)
 
-# Inicializar banco de dados (criar tabelas)
-python db_manager.py init
-python db_manager.py init --force  # Forçar mesmo que as tabelas existam
+## Resolução de Problemas Comuns
 
-# Resetar banco de dados (remover e recriar tabelas)
-python db_manager.py reset
-python db_manager.py reset --yes  # Pular confirmação
+### Erro: Coluna não encontrada
 
-# Migrar dados para o banco de dados
-python db_manager.py migrate
-python db_manager.py migrate --file caminho/para/plano.json  # Migrar um arquivo específico
-python db_manager.py migrate --dir caminho/para/diretorio  # Especificar diretório de dados
-python db_manager.py migrate -v  # Mostrar detalhes da migração
-```
+Se receber um erro como "column X does not exist":
 
-### Inicialização de Tabelas
+1. Verifique se a tabela existe no banco de dados:
+   ```sql
+   SELECT * FROM information_schema.tables WHERE table_name = 'nome_da_tabela';
+   ```
 
-Para executar diretamente o script de inicialização:
+2. Verifique a estrutura atual da tabela:
+   ```sql
+   SELECT column_name, data_type 
+   FROM information_schema.columns 
+   WHERE table_name = 'nome_da_tabela'
+   ORDER BY ordinal_position;
+   ```
 
-```bash
-# Ver ajuda
-python supabase_init.py --help
+3. Adicione a coluna faltante:
+   ```sql
+   ALTER TABLE nome_da_tabela ADD COLUMN nome_coluna TIPO_DADOS;
+   ```
 
-# Verificar tabelas existentes
-python supabase_init.py --check
+### Erro: Constraint de Chave Estrangeira
 
-# Inicializar tabelas
-python supabase_init.py
+Se ocorrer um erro ao adicionar chaves estrangeiras:
 
-# Resetar banco de dados (CUIDADO: REMOVE TODOS OS DADOS)
-python supabase_init.py --reset
-```
+1. Verifique se a tabela e a coluna de referência existem:
+   ```sql
+   SELECT * FROM tabela_referenciada WHERE coluna_referenciada = 'algum_valor';
+   ```
 
-### Migração de Dados
+2. Adicione a constraint em uma etapa separada:
+   ```sql
+   ALTER TABLE tabela 
+   ADD CONSTRAINT nome_constraint 
+   FOREIGN KEY (coluna) REFERENCES tabela_referenciada(coluna_referenciada);
+   ```
 
-Para executar diretamente o script de migração:
+3. Se o erro persistir, tente usar o console de administração do Supabase para adicionar a constraint.
 
-```bash
-# Ver ajuda
-python data_migration.py --help
+### Erro: Índices Duplicados
 
-# Migrar todos os planos
-python data_migration.py
+Se receber um erro sobre índices duplicados:
 
-# Migrar um arquivo específico
-python data_migration.py --file caminho/para/plano.json
+1. Remova o índice existente antes de criar um novo:
+   ```sql
+   DROP INDEX IF EXISTS nome_do_indice;
+   ```
 
-# Especificar diretório de dados
-python data_migration.py --dir caminho/para/diretorio
-```
+2. Crie o novo índice:
+   ```sql
+   CREATE INDEX nome_do_indice ON tabela (coluna);
+   ```
 
-## Modelo de Dados
+## Instruções para Atualização do Esquema
 
-O modelo de dados está definido no arquivo `Distribuidor para BD.txt` e implementado no módulo `wrappers/distribuidor_treinos.py`. As tabelas são criadas automaticamente com base no mapeamento definido no DistribuidorBD.
+Para atualizar ou corrigir o esquema do banco de dados:
 
-## Estrutura de Tabelas
+1. Execute o script de verificação e atualização:
+   ```sql
+   -- No editor SQL do Supabase
+   \i '/backend/database/schema_update.sql'
+   ```
 
-As principais tabelas do sistema são:
+2. Verifique os logs para identificar problemas específicos
 
-- `Fato_Treinamento` - Armazena informações sobre os planos de treinamento
-- `Fato_CicloTreinamento` - Armazena os ciclos de cada treinamento
-- `Fato_MicrocicloSemanal` - Armazena os microciclos semanais
-- `Fato_SessaoTreinamento` - Armazena as sessões de treinamento
-- `Fato_ExercicioSessao` - Armazena os exercícios de cada sessão
-- `Fato_AdaptacaoTreinamento` - Armazena as adaptações de treinamento (humor e tempo disponível)
+3. Resolva problemas individualmente se necessário, usando os comandos SQL apropriados
 
-## Resolução de Problemas
+4. Para modificações mais complexas, considere usar o script `supabase_init.py` com a opção `--reset`
 
-### Problemas de Conexão
+## Notas sobre o Supabase
 
-Se encontrar problemas de conexão com o Supabase:
+O Supabase pode ter limitações ao executar certos comandos SQL via Editor SQL:
 
-1. Verifique se as credenciais estão corretas no arquivo `.env`
-2. Execute o teste de conexão: `python db_manager.py testconn`
-3. Verifique se o endpoint da API do Supabase está acessível
+1. Executar scripts PL/pgSQL complexos (DO $$...$$) pode não mostrar todas as mensagens
+2. Adicionar constraints de chave estrangeira pode falhar no Editor SQL, exigindo uso do console ou API
+3. Recomenda-se dividir scripts grandes em partes menores quando executados via Editor SQL
 
-### Erros na Criação de Tabelas
+## Backup e Restauração
 
-Se encontrar erros durante a criação de tabelas:
+Para backup e restauração completa do banco de dados:
 
-1. Verifique se você tem permissões de administrador no projeto Supabase
-2. Verifique se já existem tabelas com os mesmos nomes (use `--reset` para remover)
-3. Verifique os logs de erro para identificar problemas específicos
+1. Use as ferramentas de backup do Supabase no painel de controle
+2. Para restauração parcial ou migração de dados, use o script `data_migration.py`
 
-### Erros na Migração de Dados
+## Modelo de Dados Completo
 
-Se encontrar erros durante a migração de dados:
-
-1. Verifique se as tabelas foram criadas corretamente
-2. Verifique se os arquivos JSON contêm dados válidos
-3. Tente migrar arquivos individualmente para identificar problemas específicos
+Para visualizar o modelo de dados completo, consulte `Distribuidor para BD.txt`
