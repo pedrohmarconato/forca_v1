@@ -1,12 +1,15 @@
-// frontend/src/components/Questionario.js
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dumbbell, ChevronDown, Heart, StretchVertical as Stretch } from 'lucide-react';
-
-// Flag para modo de teste (desativado)
-const TEST_MODE = false;
+import { userProfileApi } from '../utils/api.js';
+import { useAuth } from '../context/AuthContext.tsx';
 
 function Questionario() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
   const [formData, setFormData] = useState({
+    nome: user?.username || '',
     genero: '',
     dataNascimento: {
       dia: '1',
@@ -26,6 +29,10 @@ function Questionario() {
     preferenciaCardio: false,
     preferenciaAlongamento: false
   });
+  
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
 
   const diasSemana = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
   const objetivos = ['Hipertrofia', 'Emagrecimento', 'Força', 'Resistência', 'Condicionamento Geral'];
@@ -45,104 +52,43 @@ function Questionario() {
   const anoAtual = new Date().getFullYear();
   const anos = Array.from({ length: 100 }, (_, i) => (anoAtual - i).toString());
 
-  // TESTE: Modificado para suportar modo de teste
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Enviando dados:", formData);
-    
-    // TESTE: Enviar dados ao endpoint de teste se TEST_MODE estiver ativado
-    if (TEST_MODE) {
-      console.log("Modo de teste ativado: enviando dados para /api/criar-plano-teste");
-      
-      // Preparar os dados para o formato esperado pela API
-      const userData = {
-        id: `user_${new Date().getTime()}`, // ID único baseado no timestamp
-        nome: "Usuário Teste",
-        idade: anoAtual - parseInt(formData.dataNascimento.ano),
-        data_nascimento: `${formData.dataNascimento.ano}-${formData.dataNascimento.mes}-${formData.dataNascimento.dia}`,
-        peso: parseFloat(formData.peso) || 70,
-        altura: parseInt(formData.altura) || 170,
-        genero: formData.genero || "masculino",
-        nivel: formData.experienciaTreino,
-        historico_treino: `${formData.tempoTreino} anos de experiência`,
-        tempo_treino: formData.tempoTreinoDiario,
-        objetivos: [
-          { nome: formData.objetivo || "Hipertrofia", prioridade: 1 }
-        ],
-        restricoes: formData.temLesoes ? [
-          { nome: formData.lesoes.join(", "), gravidade: "moderada" }
-        ] : [],
-        lesoes: formData.temLesoes ? formData.lesoes.map(lesao => ({
-          regiao: lesao.toLowerCase().replace("lesão no ", "").replace("lesão nas ", ""),
-          gravidade: "moderada",
-          observacoes: formData.descricaoLesao
-        })) : [],
-        disponibilidade_semanal: formData.diasTreino.length,
-        dias_disponiveis: formData.diasTreino.map(dia => {
-          const mapDias = { 
-            'Seg': 'segunda', 'Ter': 'terça', 'Qua': 'quarta', 
-            'Qui': 'quinta', 'Sex': 'sexta', 'Sab': 'sábado', 'Dom': 'domingo' 
-          };
-          return mapDias[dia] || dia.toLowerCase();
-        }),
-        cardio: formData.preferenciaCardio ? "sim" : "não",
-        alongamento: formData.preferenciaAlongamento ? "sim" : "não",
-        conversa_chat: formData.descricaoLesao || "Sem observações adicionais",
-        // Não incluir API key no frontend
-      };
-      
-      try {
-        // URL explícita com localhost:5000
-        const response = await fetch('http://localhost:5000/api/criar-plano-teste', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(userData),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log("Resposta do servidor:", result);
-        
-        // Extrair caminhos e resumo
-        const caminhos = result.files_saved ? Object.values(result.files_saved) : [];
-        const resumo = result.resumo || {};
-        
-        // Construir mensagem mais informativa
-        let mensagem = `✅ Plano de treino gerado com sucesso!\n\n`;
-        
-        // Adicionar resumo do plano
-        if (resumo.plano) {
-          mensagem += `📊 Resumo do Plano:\n`;
-          mensagem += `- Ciclos: ${resumo.plano.ciclos || 0}\n`;
-          mensagem += `- Semanas: ${resumo.plano.semanas || 0}\n`;
-          mensagem += `- Frequência: ${resumo.plano.frequencia || 0} sessões/semana\n\n`;
-        }
-        
-        // Adicionar adaptações
-        if (resumo.adaptacoes) {
-          mensagem += `🔄 Adaptações Geradas:\n`;
-          mensagem += `- Para diferentes níveis de humor: ${resumo.adaptacoes.humor || 0}\n`;
-          mensagem += `- Para diferentes tempos disponíveis: ${resumo.adaptacoes.tempo_disponivel || 0}\n`;
-          mensagem += `- Total de adaptações: ${resumo.adaptacoes.total || 0}\n\n`;
-        }
-        
-        // Adicionar informação de arquivos
-        mensagem += `📂 Arquivos gerados em:\n${result.diretorio_resultados || "desconhecido"}`;
-        
-        alert(mensagem);
-      } catch (error) {
-        console.error("Erro ao enviar dados:", error);
-        alert("Erro ao gerar plano em modo de teste");
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      // Verificar se o usuário está autenticado
+      if (!user) {
+        throw new Error('Você precisa estar conectado para enviar o questionário');
       }
-    } else {
-      // Implementação original para quando não estiver em modo teste
-      // Aqui vai o código de produção para enviar os dados
-      console.log("Modo de produção: implementar envio real dos dados");
+      
+      // Verificar campos obrigatórios
+      if (formData.diasTreino.length === 0) {
+        throw new Error('Selecione pelo menos um dia de treino');
+      }
+      
+      if (!formData.objetivo) {
+        throw new Error('Selecione um objetivo de treino');
+      }
+      
+      // Enviar dados para a API
+      await userProfileApi.submitQuestionnaireData(formData);
+      
+      // Exibir mensagem de sucesso
+      setSuccess('Questionário enviado com sucesso! Seu plano de treino está sendo gerado.');
+      
+      // Redirecionar para a página inicial após 2 segundos
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
+      
+    } catch (err) {
+      console.error('Erro ao enviar questionário:', err);
+      setError(err.message || 'Ocorreu um erro ao enviar o questionário. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -173,9 +119,12 @@ function Questionario() {
       </div>
 
       <div className="w-full max-w-2xl p-8 rounded-2xl shadow-xl relative overflow-hidden backdrop-blur-sm my-8">
+        {/* Gradient Background */}
         <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border border-white/10" />
         
+        {/* Content Container */}
         <div className="relative z-10">
+          {/* Logo and Header */}
           <div className="text-center mb-8">
             <div className="flex flex-col items-center">
               <img 
@@ -192,13 +141,27 @@ function Questionario() {
             </p>
           </div>
 
+          {/* Error and Success Messages */}
+          {error && (
+            <div className="mb-6 p-3 bg-red-900/50 border border-red-500/50 rounded-xl text-white text-sm">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-6 p-3 bg-green-900/50 border border-green-500/50 rounded-xl text-white text-sm">
+              {success}
+            </div>
+          )}
+
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="relative group">
                 <select
                   value={formData.genero}
                   onChange={(e) => setFormData({...formData, genero: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 text-white border border-white/20 focus:outline-none focus:border-white focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm appearance-none hover:border-white/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm appearance-none hover:border-white/40"
                 >
                   <option value="" className="bg-[#020202]">Selecione seu gênero</option>
                   <option value="masculino" className="bg-[#020202]">Masculino</option>
@@ -219,7 +182,7 @@ function Questionario() {
                       ...formData,
                       dataNascimento: { ...formData.dataNascimento, dia: e.target.value }
                     })}
-                    className="w-full px-2 py-3 rounded-xl bg-white/5 text-white border border-white/20 focus:outline-none focus:border-white focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm appearance-none hover:border-white/40"
+                    className="w-full px-2 py-3 rounded-xl bg-white/5 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm appearance-none hover:border-white/40"
                   >
                     {dias.map(dia => (
                       <option key={dia} value={dia} className="bg-[#020202]">{dia}</option>
@@ -231,7 +194,7 @@ function Questionario() {
                       ...formData,
                       dataNascimento: { ...formData.dataNascimento, mes: e.target.value }
                     })}
-                    className="w-full px-2 py-3 rounded-xl bg-white/5 text-white border border-white/20 focus:outline-none focus:border-white focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm appearance-none hover:border-white/40"
+                    className="w-full px-2 py-3 rounded-xl bg-white/5 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm appearance-none hover:border-white/40"
                   >
                     {meses.map(mes => (
                       <option key={mes} value={mes} className="bg-[#020202]">{mes}</option>
@@ -243,7 +206,7 @@ function Questionario() {
                       ...formData,
                       dataNascimento: { ...formData.dataNascimento, ano: e.target.value }
                     })}
-                    className="w-full px-2 py-3 rounded-xl bg-white/5 text-white border border-white/20 focus:outline-none focus:border-white focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm appearance-none hover:border-white/40"
+                    className="w-full px-2 py-3 rounded-xl bg-white/5 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm appearance-none hover:border-white/40"
                   >
                     {anos.map(ano => (
                       <option key={ano} value={ano} className="bg-[#020202]">{ano}</option>
@@ -265,7 +228,7 @@ function Questionario() {
                     }
                   }}
                   placeholder="Peso (kg)"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 text-white border border-white/20 focus:outline-none focus:border-white focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm hover:border-white/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm hover:border-white/40"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50">kg</span>
               </div>
@@ -282,7 +245,7 @@ function Questionario() {
                     }
                   }}
                   placeholder="Altura (cm)"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 text-white border border-white/20 focus:outline-none focus:border-white focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm hover:border-white/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm hover:border-white/40"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50">cm</span>
               </div>
@@ -296,7 +259,7 @@ function Questionario() {
                   onChange={(e) => setFormData({...formData, temLesoes: e.target.checked})}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-white/5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EBFF00] peer-checked:shadow-[0_0_15px_rgba(255,255,255,0.5)]"></div>
+                <div className="w-11 h-6 bg-white/5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EBFF00]"></div>
                 <span className="ml-3 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">Possui alguma lesão?</span>
               </label>
 
@@ -310,8 +273,8 @@ function Questionario() {
                         onClick={() => handleLesaoChange(lesao)}
                         className={`px-4 py-3 rounded-xl border transition-all text-sm ${
                           formData.lesoes.includes(lesao)
-                            ? 'bg-[#EBFF00] text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.5)] font-medium'
-                            : 'border-white/20 text-white hover:border-white hover:shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                            ? 'bg-[#EBFF00] text-black border-transparent'
+                            : 'border-white/20 text-white hover:border-white/40'
                         }`}
                       >
                         {lesao}
@@ -322,7 +285,7 @@ function Questionario() {
                     value={formData.descricaoLesao}
                     onChange={(e) => setFormData({...formData, descricaoLesao: e.target.value})}
                     placeholder="Descreva mais detalhes sobre suas lesões..."
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 text-white placeholder-white/40 border border-white/20 focus:outline-none focus:border-white focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm resize-none hover:border-white/40"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all backdrop-blur-sm resize-none hover:border-white/40"
                     rows={3}
                   />
                 </div>
@@ -341,8 +304,8 @@ function Questionario() {
                     onClick={() => setFormData({...formData, experienciaTreino: nivel.toLowerCase()})}
                     className={`px-4 py-3 rounded-xl border transition-all ${
                       formData.experienciaTreino === nivel.toLowerCase()
-                        ? 'bg-[#EBFF00] text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.5)] font-medium'
-                        : 'border-white/20 text-white hover:border-white hover:shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                        ? 'bg-[#EBFF00] text-black border-transparent'
+                        : 'border-white/20 text-white hover:border-white/40'
                     }`}
                   >
                     {nivel}
@@ -382,8 +345,8 @@ function Questionario() {
                     onClick={() => setFormData({...formData, objetivo})}
                     className={`px-4 py-3 rounded-xl border transition-all ${
                       formData.objetivo === objetivo
-                        ? 'bg-[#EBFF00] text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.5)] font-medium'
-                        : 'border-white/20 text-white hover:border-white hover:shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                        ? 'bg-[#EBFF00] text-black border-transparent'
+                        : 'border-white/20 text-white hover:border-white/40'
                     }`}
                   >
                     {objetivo}
@@ -404,8 +367,8 @@ function Questionario() {
                     onClick={() => handleDiaTreinoChange(dia)}
                     className={`aspect-square rounded-xl border flex items-center justify-center transition-all text-sm ${
                       formData.diasTreino.includes(dia)
-                        ? 'bg-[#EBFF00] text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.5)] font-medium'
-                        : 'border-white/20 text-white hover:border-white hover:shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                        ? 'bg-[#EBFF00] text-black border-transparent'
+                        : 'border-white/20 text-white hover:border-white/40'
                     }`}
                   >
                     {dia}
@@ -426,8 +389,8 @@ function Questionario() {
                     onClick={() => setFormData({...formData, tempoTreinoDiario: tempo})}
                     className={`px-4 py-3 rounded-xl border transition-all ${
                       formData.tempoTreinoDiario === tempo
-                        ? 'bg-[#EBFF00] text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.5)] font-medium'
-                        : 'border-white/20 text-white hover:border-white hover:shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                        ? 'bg-[#EBFF00] text-black border-transparent'
+                        : 'border-white/20 text-white hover:border-white/40'
                     }`}
                   >
                     {tempo} min
@@ -450,7 +413,7 @@ function Questionario() {
                     onChange={(e) => setFormData({...formData, preferenciaCardio: e.target.checked})}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-white/5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EBFF00] peer-checked:shadow-[0_0_15px_rgba(255,255,255,0.5)]"></div>
+                  <div className="w-11 h-6 bg-white/5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EBFF00]"></div>
                 </label>
               </div>
 
@@ -466,16 +429,17 @@ function Questionario() {
                     onChange={(e) => setFormData({...formData, preferenciaAlongamento: e.target.checked})}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-white/5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EBFF00] peer-checked:shadow-[0_0_15px_rgba(255,255,255,0.5)]"></div>
+                  <div className="w-11 h-6 bg-white/5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EBFF00]"></div>
                 </label>
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-[#EBFF00] text-black font-semibold py-3 rounded-xl flex items-center justify-center space-x-2 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all mt-8"
+              disabled={loading}
+              className="w-full bg-[#EBFF00] text-black font-semibold py-3 rounded-xl flex items-center justify-center space-x-2 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all mt-8 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Criar Meu Treino</span>
+              <span>{loading ? 'Enviando...' : 'Criar Meu Treino'}</span>
               <Dumbbell className="w-5 h-5" />
             </button>
           </form>

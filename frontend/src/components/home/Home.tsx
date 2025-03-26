@@ -1,27 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   BellRing, Search, User, Home as HomeIcon, Dumbbell, 
   Calendar, Settings, Moon, Sun, Heart, Trophy, Flame
 } from 'lucide-react';
-import DaySelector, { Day } from './DaySelector.tsx';
-import SleepChart from './SleepChart.tsx';
+import DaySelector, { Day } from './DaySelector';
+import SleepChart from './SleepChart';
+import { useAuth } from '../../context/AuthContext';
+import { healthApi, userProfileApi } from '../../utils/api';
 
 const profileImageUrl = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
 
+// Formatar data para YYYY-MM-DD
+const formatDate = (date: Date): string => {
+  return date.toISOString().split('T')[0];
+};
+
 const Home: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedDay, setSelectedDay] = useState<Day | null>(null);
   const [activeTab, setActiveTab] = useState('home');
+  const [stats, setStats] = useState({
+    heartRate: '--',
+    calories: '--',
+    streak: '--',
+    sleep: '--',
+    lastTraining: '--',
+    userName: 'Usuário'
+  });
+  const [loading, setLoading] = useState(true);
   
   const handleSelectDay = (day: Day) => {
     setSelectedDay(day);
   };
+  
+  // Buscar estatísticas do usuário
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      setLoading(true);
+      
+      try {
+        // Tentar obter perfil do usuário
+        const profile = await userProfileApi.getProfile();
+        
+        // Buscar estatísticas do dia atual
+        const today = formatDate(new Date());
+        const userStats = await healthApi.getUserStats(today);
+        
+        // Atualizar estatísticas
+        setStats({
+          heartRate: userStats?.heart_rate_avg ? `${userStats.heart_rate_avg}` : '--',
+          calories: userStats?.calories_burned ? `${userStats.calories_burned}` : '--',
+          streak: userStats?.streak_days ? `${userStats.streak_days}` : '--',
+          sleep: userStats?.sleep_hours ? `${userStats.sleep_hours}` : '--',
+          lastTraining: userStats?.last_training_day || '--',
+          userName: profile?.nome_completo || user?.username || 'Usuário'
+        });
+      } catch (err) {
+        console.error('Erro ao buscar estatísticas do usuário:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUserStats();
+  }, [user]);
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] to-[#1A1A1A] text-white">
       {/* Status Bar */}
       <div className="flex justify-between items-center p-4 bg-black/40 backdrop-blur-sm">
         <div className="flex items-center">
-          <span className="text-sm font-medium">9:41</span>
+          <span className="text-sm font-medium">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
         </div>
         <div className="flex items-center space-x-2">
           <span className="text-sm">85%</span>
@@ -35,8 +86,8 @@ const Home: React.FC = () => {
             <img src={profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="font-bold">Olá, Rafael</h1>
-            <p className="text-white/60 text-xs">Último treino: ontem</p>
+            <h1 className="font-bold">Olá, {stats.userName}</h1>
+            <p className="text-white/60 text-xs">Último treino: {stats.lastTraining}</p>
           </div>
         </div>
         
@@ -74,7 +125,7 @@ const Home: React.FC = () => {
             </div>
             <div>
               <p className="text-white/60 text-xs">Frequência Cardíaca</p>
-              <p className="text-white text-xl font-bold">72 bpm</p>
+              <p className="text-white text-xl font-bold">{stats.heartRate} bpm</p>
             </div>
           </div>
           
@@ -84,7 +135,7 @@ const Home: React.FC = () => {
             </div>
             <div>
               <p className="text-white/60 text-xs">Calorias (hoje)</p>
-              <p className="text-white text-xl font-bold">420 kcal</p>
+              <p className="text-white text-xl font-bold">{stats.calories} kcal</p>
             </div>
           </div>
         </div>
@@ -96,7 +147,7 @@ const Home: React.FC = () => {
             </div>
             <div>
               <p className="text-white/60 text-xs">Sequência atual</p>
-              <p className="text-white text-xl font-bold">5 dias</p>
+              <p className="text-white text-xl font-bold">{stats.streak} dias</p>
             </div>
           </div>
           
@@ -106,7 +157,7 @@ const Home: React.FC = () => {
             </div>
             <div>
               <p className="text-white/60 text-xs">Sono (ontem)</p>
-              <p className="text-white text-xl font-bold">7.2 h</p>
+              <p className="text-white text-xl font-bold">{stats.sleep} h</p>
             </div>
           </div>
         </div>
@@ -148,7 +199,7 @@ const Home: React.FC = () => {
           </button>
           
           <button 
-            onClick={() => setActiveTab('settings')}
+            onClick={() => navigate('/settings')}
             className={`p-2 rounded-xl flex flex-col items-center space-y-1 transition-colors ${activeTab === 'settings' ? 'text-[#EBFF00]' : 'text-white/60'}`}
           >
             <Settings className="w-6 h-6" />

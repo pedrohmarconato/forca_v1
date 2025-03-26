@@ -1,8 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Essas variáveis devem ser definidas no ambiente (.env) em produção
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://sua-url-do-projeto.supabase.co';
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'sua-chave-anonima';
+// As variáveis devem ser definidas no ambiente (.env) em produção
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+
+// Verificar se as variáveis estão definidas
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Erro: As variáveis de ambiente REACT_APP_SUPABASE_URL e REACT_APP_SUPABASE_ANON_KEY devem ser definidas.');
+}
 
 // Cria o cliente do Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

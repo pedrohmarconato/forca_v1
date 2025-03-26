@@ -1,102 +1,164 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
-  supabase, 
-  signIn, 
-  signUp, 
-  signOut, 
-  resetPassword, 
-  updatePassword, 
-  getSession, 
-  getCurrentUser 
-} from '../utils/supabase';
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { supabase } from '../utils/supabase';
+import { Session, User } from '@supabase/supabase-js';
 
-interface User {
-  id: string;
-  email: string;
-  username?: string;
-}
-
-interface AuthContextProps {
+// Tipo para o contexto de autenticação
+interface AuthContextType {
   user: User | null;
+  session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
-  signUp: (email: string, password: string, username: string) => Promise<{ data: any; error: any }>;
-  signOut: () => Promise<{ error: any }>;
-  resetPassword: (email: string) => Promise<{ data: any; error: any }>;
-  updatePassword: (newPassword: string) => Promise<{ data: any; error: any }>;
+  signUp: (email: string, password: string) => Promise<{ error: any; data: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any; data: any }>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: any; data: any }>;
+  updatePassword: (newPassword: string) => Promise<{ error: any; data: any }>;
 }
 
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+// Criação do contexto
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+// Provider component
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se há uma sessão ativa quando o componente é montado
-    const checkUser = async () => {
+    // Buscar sessão ao iniciar
+    const getSession = async () => {
+      setLoading(true);
+      
       try {
-        setLoading(true);
-        const { data: sessionData } = await getSession();
+        const { data, error } = await supabase.auth.getSession();
         
-        if (sessionData?.session) {
-          const { data: userData } = await getCurrentUser();
-          
-          if (userData?.user) {
-            setUser({
-              id: userData.user.id,
-              email: userData.user.email || '',
-              username: userData.user.user_metadata?.username
-            });
-          }
+        if (error) {
+          console.error('Erro ao obter sessão:', error.message);
+        } else if (data?.session) {
+          setSession(data.session);
+          setUser(data.session.user);
         }
       } catch (error) {
-        console.error("Erro ao verificar usuário:", error);
+        console.error('Erro inesperado ao obter sessão:', error);
       } finally {
         setLoading(false);
       }
     };
-
-    checkUser();
-
-    // Configurar listener para mudanças no estado de autenticação
+    
+    getSession();
+    
+    // Configurar listener para mudanças na autenticação
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session && session.user) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            username: session.user.user_metadata?.username
-          });
-        } else {
-          setUser(null);
-        }
+      async (event, newSession) => {
+        console.log(`Evento de autenticação: ${event}`);
+        
+        // Atualizar o estado conforme o evento
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
         setLoading(false);
       }
     );
-
+    
+    // Limpar listener ao desmontar
     return () => {
       authListener?.subscription.unsubscribe();
     };
   }, []);
-
+  
+  // Cadastro de usuário
+  const signUp = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+      
+      return { data, error };
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Login de usuário
+  const signIn = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      return { data, error };
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Logout
+  const signOut = async () => {
+    setLoading(true);
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Enviar link de recuperação de senha
+  const resetPassword = async (email: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      
+      return { data, error };
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Atualizar senha
+  const updatePassword = async (newPassword: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      return { data, error };
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const value = {
     user,
+    session,
     loading,
-    signIn,
     signUp,
+    signIn,
     signOut,
     resetPassword,
     updatePassword
   };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = (): AuthContextProps => {
+// Hook personalizado para usar o contexto
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
+  
   if (context === undefined) {
     throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
+  
   return context;
 };
+
+export default AuthContext;

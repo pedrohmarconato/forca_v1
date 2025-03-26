@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { trainingApi } from '../../utils/api';
 
 export type Day = {
   date: Date;
@@ -8,35 +9,14 @@ export type Day = {
   sleepQuality?: number; // 0-100%
 };
 
-const generateDayData = (): Day[] => {
-  const today = new Date();
-  const days: Day[] = [];
-  
-  // Generate 14 days (previous week + current week + upcoming days)
-  for (let i = -7; i < 7; i++) {
-    const date = new Date();
-    date.setDate(today.getDate() + i);
-    
-    // Generate random status for demo purposes
-    const statuses = ['completed', 'partial', 'missed', 'scheduled'] as const;
-    const randomStatus = i < 0 
-      ? statuses[Math.floor(Math.random() * 3)] // Past days can't be scheduled
-      : statuses[Math.floor(Math.random() * 4)];
-    
-    days.push({
-      date,
-      isToday: i === 0,
-      status: randomStatus,
-      sleepQuality: Math.floor(Math.random() * 101), // Random 0-100%
-    });
-  }
-  
-  return days;
-};
-
 const formatDayName = (date: Date): string => {
   const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
   return days[date.getDay()];
+};
+
+// Formatar data para YYYY-MM-DD
+const formatDate = (date: Date): string => {
+  return date.toISOString().split('T')[0];
 };
 
 const getStatusColor = (status: Day['status']) => {
@@ -54,10 +34,83 @@ interface DaySelectorProps {
 }
 
 const DaySelector: React.FC<DaySelectorProps> = ({ onSelectDay }) => {
-  const [days] = useState<Day[]>(generateDayData());
-  const [selectedDay, setSelectedDay] = useState<Day | null>(days.find(day => day.isToday) || null);
+  const [days, setDays] = useState<Day[]>([]);
+  const [selectedDay, setSelectedDay] = useState<Day | null>(null);
   const [currentIndex, setCurrentIndex] = useState(7); // Start with today in view
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // Gerar array de dias para a UI (duas semanas)
+  useEffect(() => {
+    const today = new Date();
+    const newDays: Day[] = [];
+    
+    // Gerar 14 dias (semana anterior + semana atual + dias futuros)
+    for (let i = -7; i < 7; i++) {
+      const date = new Date();
+      date.setDate(today.getDate() + i);
+      
+      newDays.push({
+        date,
+        isToday: i === 0,
+        // Status será adicionado depois com dados do banco
+      });
+    }
+    
+    // Definir dias e selecionar o dia atual por padrão
+    setDays(newDays);
+    setSelectedDay(newDays.find(day => day.isToday) || null);
+    
+    // Buscar dados de treinos do Supabase
+    fetchTrainingSessions();
+  }, []);
+  
+  // Buscar sessões de treino
+  const fetchTrainingSessions = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      // Calcular intervalo de datas
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - 7);
+      
+      const endDate = new Date(today);
+      endDate.setDate(today.getDate() + 7);
+      
+      // Buscar sessões de treino do período
+      const sessions = await trainingApi.getTrainingSessions({
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate)
+      });
+      
+      // Atualizar dias com as informações de treino
+      if (sessions && sessions.length > 0) {
+        setDays(prevDays => {
+          const updatedDays = [...prevDays];
+          
+          // Para cada dia, verificar se há treino correspondente
+          updatedDays.forEach(day => {
+            const dayStr = formatDate(day.date);
+            const sessionForDay = sessions.find(s => s.date === dayStr);
+            
+            if (sessionForDay) {
+              day.status = sessionForDay.status as 'completed' | 'partial' | 'missed' | 'scheduled';
+            }
+          });
+          
+          return updatedDays;
+        });
+      }
+    } catch (err) {
+      console.error('Erro ao buscar sessões de treino:', err);
+      setError('Não foi possível carregar as sessões de treino.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const visibleDays = days.slice(currentIndex - 3, currentIndex + 4);
   
@@ -98,11 +151,17 @@ const DaySelector: React.FC<DaySelectorProps> = ({ onSelectDay }) => {
         </button>
       </div>
       
+      {error && (
+        <div className="p-3 bg-red-900/50 border border-red-500/50 rounded-xl text-white text-sm my-4">
+          {error}
+        </div>
+      )}
+      
       <div className="relative flex items-center">
         <button
           onClick={scrollLeft}
           className="absolute left-0 z-10 p-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/10
-                   text-white/70 hover:text-white hover:border-white/30 transition-all -ml-2"
+                 text-white/70 hover:text-white hover:border-white/30 transition-all -ml-2"
           aria-label="Scroll left"
           disabled={currentIndex <= 3}
         >
@@ -120,7 +179,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({ onSelectDay }) => {
                   key={day.date.toISOString()}
                   onClick={() => handleSelectDay(day)}
                   className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl
-                             border transition-all ${isSelected
+                           border transition-all ${isSelected
                     ? 'bg-black/60 backdrop-blur-sm border-[#EBFF00]/70 shadow-[0_0_15px_rgba(235,255,0,0.2)]'
                     : 'bg-white/5 border-white/10 hover:border-white/30'
                   }`}
@@ -143,7 +202,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({ onSelectDay }) => {
         <button
           onClick={scrollRight}
           className="absolute right-0 z-10 p-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/10
-                   text-white/70 hover:text-white hover:border-white/30 transition-all -mr-2"
+                 text-white/70 hover:text-white hover:border-white/30 transition-all -mr-2"
           aria-label="Scroll right"
           disabled={currentIndex >= days.length - 4}
         >
@@ -155,7 +214,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({ onSelectDay }) => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
           <div className="bg-[#0F0F0F] border border-white/10 rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto
-                        shadow-[0_0_30px_rgba(0,0,0,0.8)] backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]">
+                      shadow-[0_0_30px_rgba(0,0,0,0.8)] backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-white">Legenda</h3>
               <button
